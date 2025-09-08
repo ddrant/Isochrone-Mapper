@@ -1,90 +1,53 @@
 # App to find and display ischrones with given parameters using ORS api and streamlit, folium, etc
 # creation date: 07/09/2025 (d/m/y)
-# last updated: 
+# last updated: 08/09/2025
 
+# custom function files
+from utils import *
+from constants import *
+from services import *
+
+# packages
 import streamlit as st
 import pandas as pd 
 import numpy as np
-import os 
-from dotenv import load_dotenv
-
 import folium
+from streamlit_folium import st_folium # to use foliumn with streamlit
 
 
-def get_api_key() -> str:
-    # Try Streamlit secrets first
-    key = st.secrets.get("ORS_API_KEY") if hasattr(st, "secrets") else None
-    if key:
-        return key
+if "counter" not in st.session_state:
+    st.session_state.counter = 0
 
-    # Fallback: .env
-    load_dotenv()
-    key = os.getenv("ORS_API_KEY")
-    if key:
-        return key
+st.session_state.counter += 1
 
-    raise ValueError("ORS_API_KEY not found in environment or st.secrets")
+st.session_state.counter
+
+
+########################################
+
+# Page configuration
+
+########################################
+
+
+
+st.set_page_config(page_title="Isochrone Map", layout="wide", initial_sidebar_state="expanded")
 
 
 ################
 # LOAD OpenRouteService API KEY
 ################
 
-# load the .env file 
-if "ORS_API_KEY" not in st.session_state:
-    load_dotenv()
-
-    # Get the API key from the .env file
-    st.session_state.ORS_API_KEY = os.getenv("ORS_API_KEY")
 
 
-    if not st.session_state.ORS_API_KEY:
-        raise ValueError("ORS_API_KEY not found in environment")
+############################################
 
+# CONSTANTS 
 
+############################################
 
-
-
-
-
-
-
-##########################################################################################
-# Function could need reviewing 
-#########################################################################################
-
-import requests
-
-
-@st.cache_data
-def find_address_cords(address="16 Upper Hollingdean Road", focus_point=[-0.12574000, 51.50853000]):
-    """
-    focus_point : the location to focus the address search near
-         [lon: float, lat: float] : default [-0.12574000, 51.50853000] (London)
-    """
-    # Openrouteservice's geocode search api rul
-    url = f"https://api.openrouteservice.org/geocode/search"
-
-    params = {
-        "api_key": ORS_API_KEY,
-        "text":address,
-        "size": 1, # number of results to return from search
-        "focus.point.lon": focus_point[0],
-        "focus.point.lat": focus_point[1]
-        # "boudary.country": "GB"           < -- to FORCE GB only results
-    }
-
-    response = requests.get(url, params=params)
-
-    if response.status_code != 200:
-        print(f"Error {response.status_code}: {response.text}")
-        return None
-
-    data = response.json()
-
-    coords = data["features"][0]["geometry"]["coordinates"] # [lon, lat] format
-    
-    return coords
+START_LAT = 51.5
+START_LON = 0
 
 
 
@@ -99,13 +62,76 @@ def find_address_cords(address="16 Upper Hollingdean Road", focus_point=[-0.1257
 st.title("Generate youre Isochrone")
 st.header("How far can you travel?")
 
+
+if "ORS_API_KEY" not in st.session_state:
+    st.session_state.ORS_API_KEY = get_api_key()
+
+
+
+
+
+
+
+
+
+
+#####################################
+
+# Sidebar
+
+#####################################
+
+# Address search box
 address_str = st.sidebar.text_input('Search', placeholder="address")
 
+# country selectbox for address search
+country_search = st.sidebar.selectbox(
+    "Select the country of the address",
+    options = sorted(COUNTRY_TO_ALPHA2.keys()),
+    index=233
+)
 
-find_address_cords(address=address_str)
+st.sidebar.text(country_search)
+
+# refresh button 
+st.sidebar.button("Refresh")
 
 
-map = folium.map()
 
-ORS_API_KEY = get_api_key()
 
+
+
+##########################################
+
+# main?
+
+##########################################
+
+
+
+coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_str.strip(), country=country_search)
+if coords:
+    st.session_state.coords = coords
+
+## this doenst work atm
+if "coords" in st.session_state and coords is None: 
+    st.warning("No results found. Try another spelling or add a post code")
+
+
+if "coords" not in st.session_state:
+    map = folium.Map(location = [START_LAT,START_LON], zoom_start=6, min_zoom=2)
+else:
+    coords_folium = st.session_state.coords[::-1] # in [lat, lon] format
+
+    map = folium.Map(location=coords_folium)
+    folium.Marker(
+        location=coords_folium,
+        tooltip='Starting location', 
+        icon=folium.Icon(prefix='fa', icon='car', color='blue')
+        ).add_to(map) # marker needs to be in [lat, lon] format
+
+# call to render Folium map in Streamlit
+st_data = st_folium(map, height=600, use_container_width=True)
+
+
+#coords_folium
