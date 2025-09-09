@@ -113,9 +113,11 @@ coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=addr
 if coords:
     st.session_state.coords = coords
 
-## this doenst work atm
+
+
+# No result warning in the main window
 if "coords" in st.session_state and coords is None: 
-    st.warning("No results found. Try another spelling or add a post code")
+    st.sidebar.warning("No results found. Try another spelling or add a postcode")
 
 
 if "coords" not in st.session_state:
@@ -124,11 +126,17 @@ else:
     coords_folium = st.session_state.coords[::-1] # in [lat, lon] format
 
     map = folium.Map(location=coords_folium)
-    folium.Marker(
-        location=coords_folium,
-        tooltip='Starting location', 
-        icon=folium.Icon(prefix='fa', icon='car', color='blue')
-        ).add_to(map) # marker needs to be in [lat, lon] format
+
+    geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=coords[0], lat=coords[1])
+
+    # call the function to generate isochrone and add to the map
+    plot_isochrone(map=map, geoJSON=geoJSON)
+
+    #folium.Marker(
+    #    location=coords_folium,
+    #    tooltip='Starting location', 
+    #    icon=folium.Icon(prefix='fa', icon='car', color='blue')
+    #    ).add_to(map) # marker needs to be in [lat, lon] format
 
 # call to render Folium map in Streamlit
 st_data = st_folium(map, height=600, use_container_width=True)

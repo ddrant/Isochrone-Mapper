@@ -249,3 +249,27 @@ COUNTRY_TO_ALPHA2 = {
     "Zambia": "ZM",
     "Zimbabwe": "ZW",
 }
+
+
+
+FOLIUM_MARKER_COLORS = {
+    "red": "#FF0000",
+    "darkred": "#8B0000",
+    "lightred": "#FF7F7F",
+    "orange": "#FFA500",
+    "beige": "#F5F5DC",
+    "green": "#008000",
+    "darkgreen": "#006400",
+    "lightgreen": "#90EE90",
+    "blue": "#2A81CB",   # Folium's "blue"
+    "darkblue": "#00008B",
+    "lightblue": "#ADD8E6",
+    "purple": "#800080",
+    "darkpurple": "#551A8B",
+    "pink": "#FFC0CB",
+    "cadetblue": "#5F9EA0",
+    "white": "#FFFFFF",
+    "gray": "#808080",
+    "lightgray": "#D3D3D3",
+    "black": "#000000"
+}
