@@ -106,7 +106,13 @@ st.sidebar.button("Refresh")
 # main?
 
 ##########################################
+help = st.popover('Test')
 
+
+
+help.button("click")
+if "map_state_tmp" in st.session_state:
+    help.write(f"current coords: {st.session_state.map_state_tmp}")
 
 
 coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_str.strip(), country=country_search)
@@ -121,7 +127,11 @@ if "coords" in st.session_state and coords is None:
 
 
 if "coords" not in st.session_state:
-    map = folium.Map(location = [START_LAT,START_LON], zoom_start=6, min_zoom=2)
+    
+    if "last_clicked" not in st.session_state:
+        map = folium.Map(location = [START_LAT,START_LON], zoom_start=6, min_zoom=2)
+    else: 
+        map = folium.Map(location = st.session_state.last_clicked, zoom_start=13, min_zoom=2)
 else:
     coords_folium = st.session_state.coords[::-1] # in [lat, lon] format
 
@@ -138,8 +148,29 @@ else:
     #    icon=folium.Icon(prefix='fa', icon='car', color='blue')
     #    ).add_to(map) # marker needs to be in [lat, lon] format
 
+
+
+if "map_state_tmp" in st.session_state and st.session_state.map_state_tmp is not None:
+    
+    st.session_state.last_clicked = [st.session_state.map_state_tmp['lat'], st.session_state.map_state_tmp['lng']]
+    folium.Marker(
+        location=list(st.session_state.last_clicked),
+        tooltip='Starting location', 
+        icon=folium.Icon(prefix='fa', icon='car', color='blue')
+        ).add_to(map) # marker needs to be in [lat, lon] format
+
+
+
+
 # call to render Folium map in Streamlit
 st_data = st_folium(map, height=600, use_container_width=True)
 
+st.write("Last Clicked:")
+st_data['last_clicked']
 
-#coords_folium
+if st_data['last_clicked']:
+    st.session_state.map_state_tmp = st_data['last_clicked']
+
+st_data
+
+st.sidebar.button("button2")

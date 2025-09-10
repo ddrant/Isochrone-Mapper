@@ -74,7 +74,7 @@ def find_address_cords(
 
 
 
-#@st.cache_data
+@st.cache_data
 def get_isochrone(api_key: str, lon: float, lat: float, minutes: int = 30, profile: str = "driving-car") -> dict | None:
 
     url = f"https://api.openrouteservice.org/v2/isochrones/{profile}" # OpenRouteService Isochrone API url
