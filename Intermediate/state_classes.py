@@ -4,12 +4,14 @@ import streamlit as st
 import folium
 from dataclasses import dataclass, field
 from typing import OrderedDict, Optional, Tuple
+from constants import FOLIUM_MARKER_COLORS
+from services import plot_isochrone
 
 
 @dataclass
 class IsochroneLayerState:
     geojson: dict = field(default_factory=dict) # or can just check and compare if these are the same?
-    center: Optional[Tuple[float, float]] = None # need to check this before adding new isochrone laters
+    # center: Optional[Tuple[float, float]] = None # need to check this before adding new isochrone laters
     marker_color = 'blue'
     isochrone_color=None
     map_zoom = 13
@@ -17,11 +19,24 @@ class IsochroneLayerState:
     # time_minutes: int = None # this 
 
     def __post_init__(self):
-        if self.center == None:
-            self.center = tuple(self.geojson['features'][0]['properties']['center'][::-1])
-            st.write("center: ", self.center)
 
-        # any other analysis-specific stuff
+        # set the isochrone color to match the marker color if not specified
+        if isochrone_color is None:
+            isochrone_color = FOLIUM_MARKER_COLORS[self.marker_color]
+        else: 
+            isochrone_color = FOLIUM_MARKER_COLORS[self.isochrone_color]
+
+    @property
+    def center(self) -> Tuple[float, float]:
+        """Returns (lat, lon) center from geoJSON"""
+        return tuple(self.geojson['features'][0]['properties']['center'][::-1])
+    
+    @property
+    def lat(self) -> float:
+        return self.center[0]
+        
+
+
 
 @dataclass
 class MapState:
@@ -32,8 +47,9 @@ class MapState:
 
 
 
-    def add_isochrone(self, geojson, center=None, 
+    def add_isochrone(self, geojson, lat=None, lon=None, 
                    marker_color='blue', isochrone_color=None, map_zoom=13, transport_mode='car'):
+        # need to add some default randomness for the marker and isochrone colors when there are multiple isochrones and not specified
         self.isochrones[self.next_id] = IsochroneLayerState(geojson=geojson)
         self.focus_id = self.next_id
         self.next_id += 1
@@ -61,6 +77,16 @@ class MapState:
             map = folium.Map(location=self.isochrones[self.focus_id].center, zoom_start=13, min_zoom=2)
             
 
+            for id, isochrone in self.isochrones.items():
+                # call the plot for each isochrone
+                plot_isochrone(map=map,
+                               geoJSON=isochrone.geojson,
+                               lat=isochrone.center[0],
+                               lon=isochrone.center[1],
+                               marker_color=isochrone.marker_color,
+                               isochrone_color=isochrone.isochrone_color,
+                               map_zoom=isochrone.map_zoom,
+                               transport_mode=isochrone.transport_mode)
 
 
         return map

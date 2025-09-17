@@ -82,10 +82,12 @@ if "ORS_API_KEY" not in st.session_state:
 #####################################
 
 # Creating the address str in session state so we can reset it after search
+if "address_str" not in st.session_state:
+    st.session_state.address_str = ""
 
 with st.sidebar.form("search_form"):
     # Address search box
-    address_input = st.sidebar.text_input('Search', placeholder="address")#, key="address_str")
+    st.sidebar.text_input('Search', placeholder="address", key="address_str")
 
     # country selectbox for address search
     country_search = st.sidebar.selectbox(
@@ -111,10 +113,9 @@ with st.sidebar.form("search_form"):
 
 ##########################################
 help = st.popover('Test')
-
-
-
 help.button("click")
+
+
 if "map_state_tmp" in st.session_state:
     help.write(f"current coords: {st.session_state.map_state_tmp}")
 
@@ -123,53 +124,70 @@ if "map_session_state" not in st.session_state:
 
 
 
-coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_input.strip(), country=country_search)
-if coords:
-    st.session_state.coords = coords
+#coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_input.strip(), country=country_search)
+#if coords:
+#    st.session_state.coords = coords
+if "coords" not in st.session_state:
+    st.session_state.coords = None
 
-
-
+#if submitted:
+    #coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_input.strip(), country=country_search)
+    #if coords:
+    #    st.session_state.coords = coords
 # No result warning in the main window
-if "coords" in st.session_state and coords is None: 
-    st.sidebar.warning("No results found. Try another spelling or add a postcode")
+#if "coords" in st.session_state and coords is None: 
+#    st.sidebar.warning("No results found. Try another spelling or add a postcode")
 
 # just for loading the last clicked location as center spot at the moment, need to move to map state later
-if "coords" not in st.session_state and "last_clicked" in st.session_state:
-    
-    map = folium.Map(location = st.session_state.last_clicked, zoom_start=13, min_zoom=2)
-    
+#if not st.session_state.coords and "last_clicked" in st.session_state:
+#    
+#    map = folium.Map(location = st.session_state.last_clicked, zoom_start=13, min_zoom=2)
+#    
     #if "last_clicked" not in st.session_state:
     #    st.session_state.map_session_state = MapState()
     #    map = st.session_state.map_session_state.build_map()
     #    #map = folium.Map(location = [START_LAT,START_LON], zoom_start=6, min_zoom=2)
     #else: 
-else:
-   
-    #map = folium.Map(location=coords_folium)
-    if submitted:
-        st.text("submitted")
-        # search for the coords of the address
-        coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_input.strip(), country=country_search)
-        if coords:
-            st.session_state.coords = coords
 
-
-        if coords != None: # remove later temp
-            coords_folium = st.session_state.coords[::-1] # in [lat, lon] format
-            geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=coords[0], lat=coords[1])
-
-        # call the function to generate isochrone and add to the map
-        #plot_isochrone(map=map, geoJSON=geoJSON)
-            st.session_state.map_session_state.add_isochrone(geojson=geoJSON)
+    
+st.text("not on the last_clicked path")
+#map = folium.Map(location=coords_folium)
+if submitted:
+    st.text("submitted")
+    # search for the coords of the address
+    #coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_input.strip(), country=country_search)
+    #if coords:
+    #    st.session_state.coords = coords
+    coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=st.session_state.address_str.strip(), country=country_search)
     
     
-    map = st.session_state.map_session_state.build_map()
+    # If the address coords are found successfully
+    if coords:
+        #st.session_state.coords = coords
 
 
 
+    #if st.session_state.coords:
+        coords_folium = coords[::-1] # in [lat, lon] format
+        geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=coords[0], lat=coords[1])
 
 
 
+        # Add the isochrone to the map state
+        st.session_state.map_session_state.add_isochrone(geojson=geoJSON)
+    
+    # reset the coords session state variable
+    st.session_state.coords = None
+    
+    #map = st.session_state.map_session_state.build_map()
+
+map = st.session_state.map_session_state.build_map()
+
+
+
+#################
+# for last clicked
+#################
 if "map_state_tmp" in st.session_state and st.session_state.map_state_tmp is not None:
     
     st.session_state.last_clicked = [st.session_state.map_state_tmp['lat'], st.session_state.map_state_tmp['lng']]

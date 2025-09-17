@@ -146,10 +146,9 @@ def plot_isochrone(map: folium.Map, geoJSON, lat=None, lon=None,
     else: 
         isochrone_color = FOLIUM_MARKER_COLORS[isochrone_color]
 
-    isochrone_center = geoJSON['features'][0]['properties']['center']
-    if lat is None:
+    if lat is None or lon is None:
+        isochrone_center = geoJSON['features'][0]['properties']['center']
         lat = isochrone_center[1]
-    if lon is None:
         lon = isochrone_center[0]
 
     # now to add the isochrone polygon to the map 
