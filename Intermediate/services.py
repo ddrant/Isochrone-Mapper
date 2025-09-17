@@ -6,6 +6,7 @@ import folium
 
 
 
+
 ##########################################################################################
 # Function could need reviewing / polishing
 #########################################################################################
@@ -131,8 +132,7 @@ def get_isochrone(api_key: str, lon: float, lat: float, minutes: int = 30, profi
 
 #####
 
-def plot_isochrone(map: folium.Map, geoJSON, lat=None, lon=None, 
-                   marker_color='blue', isochrone_color=None, map_zoom=13, transport_mode='car') -> None:
+def add_isochrone_layer(map: folium.Map, layer: IsochroneLayerState) -> None:
     """
     transport_mode: str {'car', 'bicycle', 'person-walking', 'public-transport'}
     """
@@ -140,29 +140,24 @@ def plot_isochrone(map: folium.Map, geoJSON, lat=None, lon=None,
     # icon_transport_map = {'car': 'car', 'bicycle': 'bicycle', 'foot':'person-walking'}
     
 
-    # to match the isochrone area colour with the marker colour we need to convert it into hex colour code when passing to folium.GeoJson()
-    if isochrone_color is None:
-        isochrone_color = FOLIUM_MARKER_COLORS[marker_color]
-    else: 
-        isochrone_color = FOLIUM_MARKER_COLORS[isochrone_color]
-
-    if lat is None or lon is None:
-        isochrone_center = geoJSON['features'][0]['properties']['center']
-        lat = isochrone_center[1]
-        lon = isochrone_center[0]
-
+    # CHANGE THIS NAME
     # now to add the isochrone polygon to the map 
-    folium.GeoJson(geoJSON, name="Isochrone 30mins driving", color=isochrone_color).add_to(map)
+    folium.GeoJson(layer.geojson, name="Isochrone 30mins driving", color=layer.isochrone_color).add_to(map)
     
-    # Inject FA 6 CSS for specific icons
-    fa6_link = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">'
-    map.get_root().html.add_child(folium.Element(fa6_link))
+    # Inject FA 6 (Font Awesone 6) CSS for specific icons   
+    fa6_href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    fa6_link_tag = f'<link rel="stylesheet" href="{fa6_href}">'
+    root_html = map.get_root().html
+    # Check if FA6 link already added
+    if fa6_href not in str(root_html.render()):  # basic check to avoid duplicate injection
+        root_html.add_child(folium.Element(fa6_link_tag))
+    
 
     # Create the marker for the starting point
     folium.Marker(
-        location=[lat, lon], 
-        tooltip='Starting location', 
-        icon=folium.Icon(prefix='fa', icon=transport_mode, color=marker_color)
+        location=[layer.lat, layer.lon], 
+        tooltip='Starting location', # change to add id? and or name?
+        icon=folium.Icon(prefix='fa', icon=layer.transport_mode, color=layer.marker_color)
     ).add_to(map)
 
     return None

@@ -5,26 +5,26 @@ import folium
 from dataclasses import dataclass, field
 from typing import OrderedDict, Optional, Tuple
 from constants import FOLIUM_MARKER_COLORS
-from services import plot_isochrone
+from services import *
 
 
 @dataclass
 class IsochroneLayerState:
     geojson: dict = field(default_factory=dict) # or can just check and compare if these are the same?
     # center: Optional[Tuple[float, float]] = None # need to check this before adding new isochrone laters
-    marker_color = 'blue'
-    isochrone_color=None
-    map_zoom = 13
+    marker_color: str = 'blue'
+    isochrone_color: str = None
+    map_zoom: int = 13
     transport_mode = 'car' # this 
     # time_minutes: int = None # this 
 
     def __post_init__(self):
 
         # set the isochrone color to match the marker color if not specified
-        if isochrone_color is None:
-            isochrone_color = FOLIUM_MARKER_COLORS[self.marker_color]
+        if self.isochrone_color:
+            self.isochrone_color = FOLIUM_MARKER_COLORS[self.isochrone_color]
         else: 
-            isochrone_color = FOLIUM_MARKER_COLORS[self.isochrone_color]
+            self.isochrone_color = FOLIUM_MARKER_COLORS[self.marker_color]
 
     @property
     def center(self) -> Tuple[float, float]:
@@ -34,6 +34,10 @@ class IsochroneLayerState:
     @property
     def lat(self) -> float:
         return self.center[0]
+    
+    @property
+    def lon(self) -> float:
+        return self.center[1]
         
 
 
@@ -77,16 +81,53 @@ class MapState:
             map = folium.Map(location=self.isochrones[self.focus_id].center, zoom_start=13, min_zoom=2)
             
 
-            for id, isochrone in self.isochrones.items():
-                # call the plot for each isochrone
-                plot_isochrone(map=map,
-                               geoJSON=isochrone.geojson,
-                               lat=isochrone.center[0],
-                               lon=isochrone.center[1],
-                               marker_color=isochrone.marker_color,
-                               isochrone_color=isochrone.isochrone_color,
-                               map_zoom=isochrone.map_zoom,
-                               transport_mode=isochrone.transport_mode)
+        for id, isochrone in self.isochrones.items():
+            # call the plot for each isochrone
+            add_isochrone_layer(map=map, layer=isochrone)
 
 
         return map
+
+
+
+
+
+
+
+########
+
+# SEPERATE FUNCTION FOR NOW
+
+###########
+
+
+
+def add_isochrone_layer(map: folium.Map, layer: IsochroneLayerState) -> None:
+    """
+    transport_mode: str {'car', 'bicycle', 'person-walking', 'public-transport'}
+    """
+
+    # icon_transport_map = {'car': 'car', 'bicycle': 'bicycle', 'foot':'person-walking'}
+    
+
+    # CHANGE THIS NAME
+    # now to add the isochrone polygon to the map 
+    folium.GeoJson(layer.geojson, name="Isochrone 30mins driving", color=layer.isochrone_color).add_to(map)
+    
+    # Inject FA 6 (Font Awesone 6) CSS for specific icons   
+    fa6_href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    fa6_link_tag = f'<link rel="stylesheet" href="{fa6_href}">'
+    root_html = map.get_root().html
+    # Check if FA6 link already added
+    if fa6_href not in str(root_html.render()):  # basic check to avoid duplicate injection
+        root_html.add_child(folium.Element(fa6_link_tag))
+    
+
+    # Create the marker for the starting point
+    folium.Marker(
+        location=[layer.lat, layer.lon], 
+        tooltip='Starting location', # change to add id? and or name?
+        icon=folium.Icon(prefix='fa', icon=layer.transport_mode, color=layer.marker_color)
+    ).add_to(map)
+
+    return None
