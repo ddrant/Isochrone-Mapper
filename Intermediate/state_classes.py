@@ -5,7 +5,6 @@ import folium
 from dataclasses import dataclass, field
 from typing import OrderedDict, Optional, Tuple
 from constants import FOLIUM_MARKER_COLORS
-from services import *
 
 
 @dataclass
@@ -50,22 +49,25 @@ class MapState:
     focus_id: int = None 
 
 
-
-    def add_isochrone(self, geojson, lat=None, lon=None, 
-                   marker_color='blue', isochrone_color=None, map_zoom=13, transport_mode='car'):
+    def add_isochrone(self, geojson, marker_color='blue', 
+                      isochrone_color=None, map_zoom=13, transport_mode='car'):
+        
         # need to add some default randomness for the marker and isochrone colors when there are multiple isochrones and not specified
         self.isochrones[self.next_id] = IsochroneLayerState(geojson=geojson)
         self.focus_id = self.next_id
         self.next_id += 1
 
+
     def remove_isochrone(self, id):
         self.isochrones.pop(id, None)
         # re order the ids 
+
 
     def clear(self):
         self.isochrones.clear()
         self.markers.clear()
         self.focus_id = None
+
 
     # render and return the folium map
     def build_map(self) -> folium.Map:

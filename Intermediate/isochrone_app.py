@@ -81,9 +81,15 @@ if "ORS_API_KEY" not in st.session_state:
 
 #####################################
 
+# maybe change this to reset search later on
+if "reset_address" not in st.session_state:
+    st.session_state.reset_address = True
+
 # Creating the address str in session state so we can reset it after search
-if "address_str" not in st.session_state:
+#if "address_str" not in st.session_state:
+if st.session_state.reset_address:
     st.session_state.address_str = ""
+    st.session_state.reset_address = False
 
 with st.sidebar.form("search_form"):
     # Address search box
@@ -102,7 +108,7 @@ with st.sidebar.form("search_form"):
     # generate isochrone (search) button 
     submitted = st.sidebar.button("Generate Isochrone")
 
-
+    
 
 
 
@@ -130,11 +136,7 @@ if "map_session_state" not in st.session_state:
 if "coords" not in st.session_state:
     st.session_state.coords = None
 
-#if submitted:
-    #coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_input.strip(), country=country_search)
-    #if coords:
-    #    st.session_state.coords = coords
-# No result warning in the main window
+
 #if "coords" in st.session_state and coords is None: 
 #    st.sidebar.warning("No results found. Try another spelling or add a postcode")
 
@@ -154,32 +156,28 @@ st.text("not on the last_clicked path")
 #map = folium.Map(location=coords_folium)
 if submitted:
     st.text("submitted")
+
     # search for the coords of the address
-    #coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_input.strip(), country=country_search)
-    #if coords:
-    #    st.session_state.coords = coords
-    coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=st.session_state.address_str.strip(), country=country_search)
-    
+    coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=st.session_state.address_str, country=country_search)
     
     # If the address coords are found successfully
     if coords:
-        #st.session_state.coords = coords
 
-
-
-    #if st.session_state.coords:
-        coords_folium = coords[::-1] # in [lat, lon] format
+        #coords_folium = coords[::-1] # in [lat, lon] format
         geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=coords[0], lat=coords[1])
-
-
 
         # Add the isochrone to the map state
         st.session_state.map_session_state.add_isochrone(geojson=geoJSON)
+    #else:
+    #    st.sidebar.warning("No results found. Try another spelling or add a postcode")
     
     # reset the coords session state variable
     st.session_state.coords = None
     
-    #map = st.session_state.map_session_state.build_map()
+    # set the reset address flag to true to reset the address input box
+    st.session_state.reset_address = True
+    
+    st.sidebar.text(coords)
 
 map = st.session_state.map_session_state.build_map()
 
@@ -214,7 +212,5 @@ if st_data['last_clicked']:
 
 
 st_data
-
-st.sidebar.button("button2")
 
 
