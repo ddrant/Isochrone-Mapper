@@ -74,7 +74,10 @@ if "ORS_API_KEY" not in st.session_state:
 
 
 
+if "show_warning" not in st.session_state:
+    st.session_state.show_warning = False
 
+print(f"show warning: {st.session_state.show_warning} ")
 #####################################
 
 # Sidebar
@@ -85,11 +88,20 @@ if "ORS_API_KEY" not in st.session_state:
 if "reset_address" not in st.session_state:
     st.session_state.reset_address = True
 
+print(f"reset adrress: {st.session_state.reset_address}")
+
 # Creating the address str in session state so we can reset it after search
 #if "address_str" not in st.session_state:
 if st.session_state.reset_address:
     st.session_state.address_str = ""
     st.session_state.reset_address = False
+
+print(f"reset address after: {st.session_state.reset_address}   ")
+
+if st.session_state.show_warning:
+    st.sidebar.warning("No results found. Try another spelling or add a postcode")
+
+print(f"show warning after: {st.session_state.show_warning} ")
 
 with st.sidebar.form("search_form"):
     # Address search box
@@ -130,15 +142,9 @@ if "map_session_state" not in st.session_state:
 
 
 
-#coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=address_input.strip(), country=country_search)
-#if coords:
-#    st.session_state.coords = coords
-if "coords" not in st.session_state:
-    st.session_state.coords = None
 
 
-#if "coords" in st.session_state and coords is None: 
-#    st.sidebar.warning("No results found. Try another spelling or add a postcode")
+
 
 # just for loading the last clicked location as center spot at the moment, need to move to map state later
 #if not st.session_state.coords and "last_clicked" in st.session_state:
@@ -152,7 +158,7 @@ if "coords" not in st.session_state:
     #else: 
 
     
-st.text("not on the last_clicked path")
+
 #map = folium.Map(location=coords_folium)
 if submitted:
     st.text("submitted")
@@ -161,23 +167,30 @@ if submitted:
     coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=st.session_state.address_str, country=country_search)
     
     # If the address coords are found successfully
-    if coords:
+    if coords is not None:
 
         #coords_folium = coords[::-1] # in [lat, lon] format
         geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=coords[0], lat=coords[1])
 
         # Add the isochrone to the map state
         st.session_state.map_session_state.add_isochrone(geojson=geoJSON)
-    #else:
-    #    st.sidebar.warning("No results found. Try another spelling or add a postcode")
+
+        # now we can remove the warning flag if it was on
+        st.session_state.show_warning = False
+    else:
+        print("turning warning on")
+        st.session_state.show_warning = True
+    
     
     # reset the coords session state variable
-    st.session_state.coords = None
+    #st.session_state.coords = None
+    print(f"coords: {coords}")
     
     # set the reset address flag to true to reset the address input box
     st.session_state.reset_address = True
+
+    st.rerun() # rerun the app to reset the address input box and show warning if needed
     
-    st.sidebar.text(coords)
 
 map = st.session_state.map_session_state.build_map()
 
