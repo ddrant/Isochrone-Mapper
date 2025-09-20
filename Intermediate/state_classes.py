@@ -14,8 +14,8 @@ class IsochroneLayerState:
     marker_color: str = 'blue'
     isochrone_color: str = None
     map_zoom: int = 13
-    transport_mode = 'car' # this 
-    # time_minutes: int = None # this 
+    transport_mode: str = 'car' # this 
+    time_allowance_mins: int = None # this 
 
     def __post_init__(self):
 
@@ -50,10 +50,32 @@ class MapState:
 
 
     def add_isochrone(self, geojson, marker_color='blue', 
-                      isochrone_color=None, map_zoom=13, transport_mode='car'):
+                      isochrone_color=None, map_zoom=13, transport_mode='car', time_allowance_mins = 30):
         
+
         # need to add some default randomness for the marker and isochrone colors when there are multiple isochrones and not specified
-        self.isochrones[self.next_id] = IsochroneLayerState(geojson=geojson)
+        new_layer = IsochroneLayerState(
+            geojson=geojson, 
+            marker_color=marker_color, 
+            isochrone_color=isochrone_color, 
+            map_zoom=map_zoom, 
+            transport_mode=transport_mode,
+            time_allowance_mins=time_allowance_mins
+            )
+        
+        for layer in self.isochrones.values():
+            if (
+                layer.center == new_layer.center and
+                layer.transport_mode == new_layer.transport_mode and
+                layer.time_allowance_mins == time_allowance_mins
+            ):
+                print("Isochrone at this location already exists, not adding.")
+                st.session_state.duplicate_isochrone_warning = True
+                return
+        
+        # if layer doesnt already exist, add it to the dict
+        self.isochrones[self.next_id] = new_layer
+        
         self.focus_id = self.next_id
         self.next_id += 1
 

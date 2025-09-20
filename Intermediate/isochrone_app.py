@@ -77,6 +77,9 @@ if "ORS_API_KEY" not in st.session_state:
 if "show_warning" not in st.session_state:
     st.session_state.show_warning = False
 
+if "duplicate_isochrone_warning" not in st.session_state:
+    st.session_state.duplicate_isochrone_warning = False
+
 print(f"show warning: {st.session_state.show_warning} ")
 #####################################
 
@@ -88,7 +91,6 @@ print(f"show warning: {st.session_state.show_warning} ")
 if "reset_address" not in st.session_state:
     st.session_state.reset_address = True
 
-print(f"reset adrress: {st.session_state.reset_address}")
 
 # Creating the address str in session state so we can reset it after search
 #if "address_str" not in st.session_state:
@@ -96,12 +98,19 @@ if st.session_state.reset_address:
     st.session_state.address_str = ""
     st.session_state.reset_address = False
 
-print(f"reset address after: {st.session_state.reset_address}   ")
-
+# no search results warning
 if st.session_state.show_warning:
     st.sidebar.warning("No results found. Try another spelling or add a postcode")
 
-print(f"show warning after: {st.session_state.show_warning} ")
+
+print(f"duplicate warning: {st.session_state.duplicate_isochrone_warning} ")
+
+# duplicate isochrone warning
+if st.session_state.duplicate_isochrone_warning:
+    st.sidebar.warning("Isochrone at this location with these parameters already exists.")
+
+print(f"duplicate warning after: {st.session_state.duplicate_isochrone_warning}")
+
 
 with st.sidebar.form("search_form"):
     # Address search box
@@ -161,7 +170,11 @@ if "map_session_state" not in st.session_state:
 
 #map = folium.Map(location=coords_folium)
 if submitted:
+    # can remove later
     st.text("submitted")
+
+    # reset the duplicate warning flag when new search is made
+    st.session_state.duplicate_isochrone_warning = False
 
     # search for the coords of the address
     coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=st.session_state.address_str, country=country_search)
