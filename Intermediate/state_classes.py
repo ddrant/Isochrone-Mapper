@@ -80,9 +80,19 @@ class MapState:
         self.next_id += 1
 
 
-    def remove_isochrone(self, id):
+    def remove_isochrone(self, id=None):
+        if self.isochrones == {}:
+            return
+        
+        if id is None:
+            # remove the last added isochrone
+            id = max(self.isochrones.keys())
+
         self.isochrones.pop(id, None)
         # re order the ids 
+        self.isochrones = OrderedDict((new_id, layer) for new_id, layer in enumerate(self.isochrones.values(), start=1))
+        self.next_id = len(self.isochrones) + 1
+        self.focus_id = max(self.isochrones.keys()) if self.isochrones else None
 
 
     def clear(self):

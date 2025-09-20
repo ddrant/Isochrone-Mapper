@@ -130,6 +130,7 @@ with st.sidebar.form("search_form"):
     submitted = st.sidebar.button("Generate Isochrone")
 
     
+    remove_last = st.sidebar.button("Remove last isochrone")
 
 
 
@@ -203,7 +204,13 @@ if submitted:
     st.session_state.reset_address = True
 
     st.rerun() # rerun the app to reset the address input box and show warning if needed
-    
+
+
+
+if remove_last:
+    st.session_state.map_session_state.remove_isochrone()
+    #st.rerun()
+
 
 map = st.session_state.map_session_state.build_map()
 
@@ -234,6 +241,7 @@ st_data['last_clicked']
 
 if st_data['last_clicked']:
     st.session_state.map_state_tmp = st_data['last_clicked']
+    st.rerun()
 
 
 
