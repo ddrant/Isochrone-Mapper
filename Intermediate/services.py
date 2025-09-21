@@ -92,9 +92,10 @@ def get_isochrone(api_key: str, lon: float, lat: float, minutes: int = 30, profi
     # body/parameters for the isochrone api
     body = {
         "locations": [[lon, lat]],      # can include more than one location in one call?
+        "range_type": "time",
         "range": [minutes * 60],        # convert the minutes input into seconds
         "units": "m",
-        "attributes": ["area", "reachfactor"]   # add more in here for analysis stage. Population, etc
+        "attributes": ["area", "reachfactor"],   # add more in here for analysis stage. Population, etc
     }
 
     try: 

@@ -142,7 +142,7 @@ def add_isochrone_layer(map: folium.Map, layer: IsochroneLayerState) -> None:
     """
 
     # icon_transport_map = {'car': 'car', 'bicycle': 'bicycle', 'foot':'person-walking'}
-    
+    # NEED TO MAP THE LAYER TRANSPORT MODE TO THE FONT AWESOME ICON NAME
 
     # CHANGE THIS NAME
     # now to add the isochrone polygon to the map 

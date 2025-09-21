@@ -60,11 +60,14 @@ START_LON = 0
 
 
 st.title("Generate youre Isochrone")
-st.header("How far can you travel?")
+#st.header("How far can you travel?")
 
 
 if "ORS_API_KEY" not in st.session_state:
     st.session_state.ORS_API_KEY = get_api_key()
+
+
+
 
 
 
@@ -85,12 +88,19 @@ print(f"show warning: {st.session_state.show_warning} ")
 
 # Sidebar
 
-#####################################
+#####################################]
+
+
+# pills options for search mode or select on map mode
+use_map = st.sidebar.toggle("Click to set location", value=False, help="Toggle between searching for an address or clicking on the map to set a location")
+
+
+
+# warnings and resets 
 
 # maybe change this to reset search later on
 if "reset_address" not in st.session_state:
     st.session_state.reset_address = True
-
 
 # Creating the address str in session state so we can reset it after search
 #if "address_str" not in st.session_state:
@@ -102,7 +112,6 @@ if st.session_state.reset_address:
 if st.session_state.show_warning:
     st.sidebar.warning("No results found. Try another spelling or add a postcode")
 
-
 print(f"duplicate warning: {st.session_state.duplicate_isochrone_warning} ")
 
 # duplicate isochrone warning
@@ -112,25 +121,56 @@ if st.session_state.duplicate_isochrone_warning:
 print(f"duplicate warning after: {st.session_state.duplicate_isochrone_warning}")
 
 
-with st.sidebar.form("search_form"):
-    # Address search box
-    st.sidebar.text_input('Search', placeholder="address", key="address_str")
 
-    # country selectbox for address search
-    country_search = st.sidebar.selectbox(
-        "Select the country of the address",
-        options = sorted(COUNTRY_TO_ALPHA2.keys()),
-        index=233
-    )
 
-    # remove later
-    st.sidebar.text(country_search)
 
-    # generate isochrone (search) button 
-    submitted = st.sidebar.button("Generate Isochrone")
+
+# functionality 
+
+with st.sidebar:
+    with st.form("search_form"):
+        # Address search box
+        st.text_input('Search', placeholder="address", key="address_str", disabled=use_map)
+
+        # country selectbox for address search
+        country_search = st.selectbox(
+            "Select the country of the address",
+            options = sorted(COUNTRY_TO_ALPHA2.keys()),
+            index=233,
+            disabled=use_map
+        )
+
+        # add a find address button separate from the generate isochrone button
+        # this will pin a marker on the map at the searched location
+        # then they select the transport mode and time allowance, etc and hit generate isochrone
+        # the marker can also be set by clicking on the map, which separates the need to press search address button
+        find_address = st.form_submit_button("Find Address", disabled=use_map, use_container_width=True)
+
 
     
-    remove_last = st.sidebar.button("Remove last isochrone")
+    with st.form("isochrone params"):
+        # transport mode selectbox
+        transport_mode = st.selectbox(
+            "Select transport mode",
+            options = ["driving-car", "cycling-regular", "foot-walking"],
+            index=0
+        )
+
+        # time allowance slider
+        time_allowance = st.slider(
+            "Select time allowance (minutes)",
+            min_value=5,
+            max_value=60,
+            value=30,
+            step=5
+        )
+
+        # generate isochrone (search) button 
+        submitted = st.form_submit_button("Generate Isochrone", use_container_width=True)
+
+   #submitted = st.button("Find address and Generate Isochrone", use_container_width=True, disabled=use_map)
+    
+    remove_last = st.sidebar.button("Remove last isochrone", use_container_width=True)
 
 
 
@@ -184,10 +224,12 @@ if submitted:
     if coords is not None:
 
         #coords_folium = coords[::-1] # in [lat, lon] format
-        geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=coords[0], lat=coords[1])
+        geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=coords[0], lat=coords[1],
+                                profile=transport_mode, minutes=time_allowance)
+
 
         # Add the isochrone to the map state
-        st.session_state.map_session_state.add_isochrone(geojson=geoJSON)
+        st.session_state.map_session_state.add_isochrone(geojson=geoJSON, transport_mode=transport_mode, time_allowance_mins=time_allowance)
 
         # now we can remove the warning flag if it was on
         st.session_state.show_warning = False
@@ -216,6 +258,16 @@ map = st.session_state.map_session_state.build_map()
 
 
 
+################# 
+
+# Add columns for map and isochrones added info
+col1, col2 = st.columns([4,1])
+
+
+
+
+
+
 #################
 # for last clicked
 #################
@@ -229,9 +281,13 @@ if "map_state_tmp" in st.session_state and st.session_state.map_state_tmp is not
         ).add_to(map) # marker needs to be in [lat, lon] format
 
 
+######
+# COL 1 - MAP
+######
 
-# call to render Folium map in Streamlit
-st_data = st_folium(map, height=600, use_container_width=True)
+with col1: 
+    # call to render Folium map in Streamlit
+    st_data = st_folium(map, height=700, use_container_width=True)
 
 
 
