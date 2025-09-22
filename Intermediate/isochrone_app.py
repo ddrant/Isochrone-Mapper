@@ -67,6 +67,8 @@ if "ORS_API_KEY" not in st.session_state:
     st.session_state.ORS_API_KEY = get_api_key()
 
 
+if "map_session_state" not in st.session_state:
+    st.session_state.map_session_state = MapState()
 
 
 
@@ -77,22 +79,37 @@ if "ORS_API_KEY" not in st.session_state:
 
 
 
-if "show_warning" not in st.session_state:
-    st.session_state.show_warning = False
+if "search_warning" not in st.session_state:
+    st.session_state.search_warning = False
 
 if "duplicate_isochrone_warning" not in st.session_state:
     st.session_state.duplicate_isochrone_warning = False
 
-print(f"show warning: {st.session_state.show_warning} ")
+print(f"show warning: {st.session_state.search_warning} ")
 #####################################
 
 # Sidebar
 
 #####################################]
 
+# set the previous search mode to watch for changes
+prev_use_map = st.session_state.map_session_state.use_map
 
-# pills options for search mode or select on map mode
-use_map_toggle = st.sidebar.toggle("Click to set location", value=False, help="Toggle between searching for an address or clicking on the map to set a location")
+# toggle for search mode (address search or map click)
+st.session_state.map_session_state.use_map = st.sidebar.toggle(
+    "Click to set location", 
+    value=False, 
+    help="Toggle between searching for an address or clicking on the map to set a location"
+    )
+
+# if the toggle has changed, clear the selected location 
+if st.session_state.map_session_state.use_map != prev_use_map:
+    st.session_state.map_session_state.selected_location = None
+    st.session_state.reset_address = True # reset the address input box when switching to map click mode
+    st.session_state.search_warning = False # clear any warnings when switching modes
+    st.session_state.duplicate_isochrone_warning = False # clear duplicate warning when switching modes
+    print("clearing selected location")
+    print(f"selected location after clearing: {st.session_state.map_session_state.selected_location}")
 
 
 
@@ -109,7 +126,7 @@ if st.session_state.reset_address:
     st.session_state.reset_address = False
 
 # no search results warning
-if st.session_state.show_warning:
+if st.session_state.search_warning:
     st.sidebar.warning("No results found. Try another spelling or add a postcode")
 
 print(f"duplicate warning: {st.session_state.duplicate_isochrone_warning} ")
@@ -130,21 +147,21 @@ print(f"duplicate warning after: {st.session_state.duplicate_isochrone_warning}"
 with st.sidebar:
     with st.form("search_form"):
         # Address search box
-        st.text_input('Search', placeholder="address", key="address_str", disabled=use_map_toggle)
+        st.text_input('Search', placeholder="address", key="address_str", disabled=st.session_state.map_session_state.use_map)
 
         # country selectbox for address search
         country_search = st.selectbox(
             "Select the country of the address",
             options = sorted(COUNTRY_TO_ALPHA2.keys()),
             index=233,
-            disabled=use_map_toggle
+            disabled=st.session_state.map_session_state.use_map
         )
 
         # add a find address button separate from the generate isochrone button
         # this will pin a marker on the map at the searched location
         # then they select the transport mode and time allowance, etc and hit generate isochrone
         # the marker can also be set by clicking on the map, which separates the need to press search address button
-        find_address = st.form_submit_button("Find Address", disabled=use_map_toggle, use_container_width=True)
+        find_address = st.form_submit_button("Find Address", disabled=st.session_state.map_session_state.use_map, use_container_width=True)
 
     st.markdown("---")
     
@@ -181,14 +198,15 @@ with st.sidebar:
 
 ##########################################
 help = st.popover('Test')
-help.button("click")
+rerun_btn = help.button("click")
+
+if rerun_btn:
+    st.rerun()
 
 
 if "map_state_tmp" in st.session_state:
     help.write(f"current coords: {st.session_state.map_state_tmp}")
 
-if "map_session_state" not in st.session_state:
-    st.session_state.map_session_state = MapState()
 
 
 
@@ -207,25 +225,41 @@ if "map_session_state" not in st.session_state:
     #    #map = folium.Map(location = [START_LAT,START_LON], zoom_start=6, min_zoom=2)
     #else: 
 
-    
 
-#map = folium.Map(location=coords_folium)
+if find_address:
+
+    lon_lat_coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=st.session_state.address_str, country=country_search)
+
+    if lon_lat_coords is not None:
+        st.session_state.map_session_state.selected_location = (lon_lat_coords[1], lon_lat_coords[0]) # in (lat, lon) format for folium
+
+
+        st.session_state.last_searched = st.session_state.address_str.strip() # maybe we want to store search address for isochrone
+
+
+        st.session_state.search_warning = False
+    else:
+        print("turning search warning on")
+        st.session_state.search_warning = True
+
+    st.rerun() # for the warnings
+
+
+
 if submitted:
     # can remove later
     st.text("submitted")
-
+    
+    # generate
     # reset the duplicate warning flag when new search is made
     st.session_state.duplicate_isochrone_warning = False
 
-    # search for the coords of the address
-    lon_lat_coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=st.session_state.address_str, country=country_search)
-    print(type(coords))
     # If the address coords are found successfully
-    if lon_lat_coords is not None:
+    if st.session_state.map_session_state.selected_location is not None:
 
-        st.session_state.map_session_state.selected_location = (lon_lat_coords[1], lon_lat_coords[0]) # in (lat, lon) format for folium
-        
-        geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=lon_lat_coords[0], lat=lon_lat_coords[1],
+        # st.session_state.map_session_state.selected_location = (lon_lat_coords[1], lon_lat_coords[0]) # in (lat, lon) format for folium
+        lat, lon = st.session_state.map_session_state.selected_location
+        geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=lon, lat=lat,
                                 profile=transport_mode, minutes=time_allowance)
 
 
@@ -235,13 +269,14 @@ if submitted:
         # now we can remove the warning flag if it was on
         st.session_state.show_warning = False
     else:
-        print("turning warning on")
-        st.session_state.show_warning = True
+        print("no location set")
+        # change to no location set warning
+        #st.session_state.show_warning = True
     
     
     # reset the coords session state variable
     #st.session_state.coords = None
-    print(f"lon_lat_coords: {lon_lat_coords}")
+    print(f"selected location: {st.session_state.map_session_state.selected_location}")
     
     # set the reset address flag to true to reset the address input box
     st.session_state.reset_address = True
@@ -296,7 +331,7 @@ with col1:
 st.write("Last Clicked:")
 st_data['last_clicked']
 
-if use_map_toggle and st_data['last_clicked']:
+if st.session_state.map_session_state.use_map and st_data['last_clicked']:
     st.session_state.map_state_tmp = st_data['last_clicked']
 
     st.session_state.map_session_state.selected_location = (st_data['last_clicked']['lat'], st_data['last_clicked']['lng']) # (lat, lon) tuple for folium

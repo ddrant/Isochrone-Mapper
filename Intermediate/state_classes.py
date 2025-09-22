@@ -81,6 +81,8 @@ class MapState:
         self.focus_id = self.next_id
         self.next_id += 1
 
+        self.selected_location = None # clear the selected location after adding the isochrone
+
 
     def remove_isochrone(self, id=None):
         if self.isochrones == {}:
@@ -109,41 +111,60 @@ class MapState:
             folium.Marker(
                 location=self.selected_location,
                 tooltip="Selected location",
-                icon=folium.Icon(color="blue", icon="map-marker")
+                icon=folium.Icon(prefix='fa', icon="car", color="blue")
             ).add_to(map)
 
+
+    def _create_base_map(self, location: tuple[float, float], zoom: int = 6, min_zoom:int = 2) -> folium.Map:
+        """
+        Internal helper to create a Folium map with consistent defaults
+        (center, zoom, min_zoom, and FA icons).
+        """
+
+        m = folium.Map(location=location, zoom_start=zoom, min_zoom=min_zoom)
+
+        # Inject Font Awesome 5 (includes car, bicycle, walking, etc.)
+        fa5_href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        m.get_root().html.add_child(
+            folium.Element(f'<link rel="stylesheet" href="{fa5_href}">')
+        )
+
+        return m
+    
 
     # render and return the folium map
     def build_map(self) -> folium.Map:
 
         # start with the origin location
-        map = folium.Map(location = self.origin, zoom_start=6, min_zoom=2)
-
-        # Inject FA 6 (Font Awesone 6) CSS for specific icons   
-        # Always inject FA6 once per map
-        fa6_href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-        map.get_root().html.add_child(folium.Element(f'<link rel="stylesheet" href="{fa6_href}">'))
-
-
-        # add each isochrone layer to the map
-        for id, isochrone in self.isochrones.items():
-            add_isochrone_layer(map=map, layer=isochrone)
+        #map = folium.Map(location = self.origin, zoom_start=6, min_zoom=2)
 
 
         # if last action was a search address or map click, center on that location
         if self.selected_location:
             print(f"selected location: {self.selected_location}")
             #map = folium.Map(location=self.selected_location, zoom_start=10, min_zoom=2)
+            map = self._create_base_map(location=self.selected_location, zoom=10, min_zoom=2)
             self.add_selected_location_marker(map)
-            map.location = self.selected_location
-            map.zoom_start = 10
+            #map.location = self.selected_location
+            #map.zoom_start = 10
         # else if there are isochrones, center on the focused one
         elif self.focus_id and self.focus_id in self.isochrones:
             print(f"focus id: {self.focus_id}")
             print(f"center : {self.isochrones[self.focus_id].center}")
             #map = folium.Map(location=self.isochrones[self.focus_id].center, zoom_start=10, min_zoom=2)
-            map.location = self.isochrones[self.focus_id].center
-            map.zoom_start = self.isochrones[self.focus_id].map_zoom
+            map = self._create_base_map(location=self.isochrones[self.focus_id].center, 
+                                        zoom=self.isochrones[self.focus_id].map_zoom,  # map this depend on the area of the isochrone later on?
+                                        min_zoom=2)
+            #map.location = self.isochrones[self.focus_id].center
+            #map.zoom_start = self.isochrones[self.focus_id].map_zoom
+        else:
+            #map = folium.Map(location=self.origin, zoom_start=6, min_zoom=2)
+            map = self._create_base_map(location=self.origin, zoom=6, min_zoom=2)
+
+
+        # add each isochrone layer to the map
+        for id, isochrone in self.isochrones.items():
+            add_isochrone_layer(map=map, layer=isochrone)
 
 
         return map
@@ -166,7 +187,13 @@ def add_isochrone_layer(map: folium.Map, layer: IsochroneLayerState) -> None:
     """
     transport_mode: str {'car', 'bicycle', 'person-walking', 'public-transport'}
     """
-
+    TRANSPORT_MODE_MAP = {
+        'driving-car': 'car',  
+        'cycling-regular': 'bicycle',
+        'foot-walking': 'person-walking',
+    }
+    print(f"transport mode map keys: {TRANSPORT_MODE_MAP.keys()}")
+    transport_icon = TRANSPORT_MODE_MAP.get(layer.transport_mode, 'car') # default to 'car' if not found
     # icon_transport_map = {'car': 'car', 'bicycle': 'bicycle', 'foot':'person-walking'}
     # NEED TO MAP THE LAYER TRANSPORT MODE TO THE FONT AWESOME ICON NAME
 
@@ -187,7 +214,7 @@ def add_isochrone_layer(map: folium.Map, layer: IsochroneLayerState) -> None:
     folium.Marker(
         location=[layer.lat, layer.lon], 
         tooltip='Starting location', # change to add id? and or name?
-        icon=folium.Icon(prefix='fa', icon=layer.transport_mode, color=layer.marker_color)
+        icon=folium.Icon(prefix='fa', icon=transport_icon, color=layer.marker_color)
     ).add_to(map)
 
     return None
