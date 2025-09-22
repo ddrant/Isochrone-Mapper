@@ -92,7 +92,7 @@ print(f"show warning: {st.session_state.show_warning} ")
 
 
 # pills options for search mode or select on map mode
-use_map = st.sidebar.toggle("Click to set location", value=False, help="Toggle between searching for an address or clicking on the map to set a location")
+use_map_toggle = st.sidebar.toggle("Click to set location", value=False, help="Toggle between searching for an address or clicking on the map to set a location")
 
 
 
@@ -130,23 +130,23 @@ print(f"duplicate warning after: {st.session_state.duplicate_isochrone_warning}"
 with st.sidebar:
     with st.form("search_form"):
         # Address search box
-        st.text_input('Search', placeholder="address", key="address_str", disabled=use_map)
+        st.text_input('Search', placeholder="address", key="address_str", disabled=use_map_toggle)
 
         # country selectbox for address search
         country_search = st.selectbox(
             "Select the country of the address",
             options = sorted(COUNTRY_TO_ALPHA2.keys()),
             index=233,
-            disabled=use_map
+            disabled=use_map_toggle
         )
 
         # add a find address button separate from the generate isochrone button
         # this will pin a marker on the map at the searched location
         # then they select the transport mode and time allowance, etc and hit generate isochrone
         # the marker can also be set by clicking on the map, which separates the need to press search address button
-        find_address = st.form_submit_button("Find Address", disabled=use_map, use_container_width=True)
+        find_address = st.form_submit_button("Find Address", disabled=use_map_toggle, use_container_width=True)
 
-
+    st.markdown("---")
     
     with st.form("isochrone params"):
         # transport mode selectbox
@@ -168,7 +168,7 @@ with st.sidebar:
         # generate isochrone (search) button 
         submitted = st.form_submit_button("Generate Isochrone", use_container_width=True)
 
-   #submitted = st.button("Find address and Generate Isochrone", use_container_width=True, disabled=use_map)
+   #submitted = st.button("Find address and Generate Isochrone", use_container_width=True, disabled=use_map_toggle)
     
     remove_last = st.sidebar.button("Remove last isochrone", use_container_width=True)
 
@@ -218,13 +218,14 @@ if submitted:
     st.session_state.duplicate_isochrone_warning = False
 
     # search for the coords of the address
-    coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=st.session_state.address_str, country=country_search)
-    
+    lon_lat_coords = find_address_cords(api_key = st.session_state.ORS_API_KEY, address=st.session_state.address_str, country=country_search)
+    print(type(coords))
     # If the address coords are found successfully
-    if coords is not None:
+    if lon_lat_coords is not None:
 
-        #coords_folium = coords[::-1] # in [lat, lon] format
-        geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=coords[0], lat=coords[1],
+        st.session_state.map_session_state.selected_location = (lon_lat_coords[1], lon_lat_coords[0]) # in (lat, lon) format for folium
+        
+        geoJSON = get_isochrone(api_key=st.session_state.ORS_API_KEY, lon=lon_lat_coords[0], lat=lon_lat_coords[1],
                                 profile=transport_mode, minutes=time_allowance)
 
 
@@ -240,7 +241,7 @@ if submitted:
     
     # reset the coords session state variable
     #st.session_state.coords = None
-    print(f"coords: {coords}")
+    print(f"lon_lat_coords: {lon_lat_coords}")
     
     # set the reset address flag to true to reset the address input box
     st.session_state.reset_address = True
@@ -271,14 +272,14 @@ col1, col2 = st.columns([4,1])
 #################
 # for last clicked
 #################
-if "map_state_tmp" in st.session_state and st.session_state.map_state_tmp is not None:
-    
-    st.session_state.last_clicked = [st.session_state.map_state_tmp['lat'], st.session_state.map_state_tmp['lng']]
-    folium.Marker(
-        location=list(st.session_state.last_clicked),
-        tooltip='Starting location', 
-        icon=folium.Icon(prefix='fa', icon='car', color='blue')
-        ).add_to(map) # marker needs to be in [lat, lon] format
+#if "map_state_tmp" in st.session_state and st.session_state.map_state_tmp is not None:
+#    
+#    st.session_state.last_clicked = [st.session_state.map_state_tmp['lat'], st.session_state.map_state_tmp['lng']]
+#    folium.Marker(
+#        location=list(st.session_state.last_clicked),
+#        tooltip='Starting location', 
+#        icon=folium.Icon(prefix='fa', icon='car', color='blue')
+#        ).add_to(map) # marker needs to be in [lat, lon] format
 
 
 ######
@@ -295,8 +296,10 @@ with col1:
 st.write("Last Clicked:")
 st_data['last_clicked']
 
-if st_data['last_clicked']:
+if use_map_toggle and st_data['last_clicked']:
     st.session_state.map_state_tmp = st_data['last_clicked']
+
+    st.session_state.map_session_state.selected_location = (st_data['last_clicked']['lat'], st_data['last_clicked']['lng']) # (lat, lon) tuple for folium
     st.rerun()
 
 

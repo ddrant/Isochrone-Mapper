@@ -13,7 +13,7 @@ class IsochroneLayerState:
     # center: Optional[Tuple[float, float]] = None # need to check this before adding new isochrone laters
     marker_color: str = 'blue'
     isochrone_color: str = None
-    map_zoom: int = 13
+    map_zoom: int = 10
     transport_mode: str = 'car' # this 
     time_allowance_mins: int = None # this 
 
@@ -47,6 +47,8 @@ class MapState:
     isochrones: OrderedDict[int, IsochroneLayerState] = field(default_factory=OrderedDict)
     next_id: int = 1 # starts with 1, next id to give the added isochrone
     focus_id: int = None 
+    selected_location: Optional[Tuple[float, float]] = None # (lat, lon) for the search adress or clicked location
+    use_map: bool = False # if true, use the map clicked location instead of searched address
 
 
     def add_isochrone(self, geojson, marker_color='blue', 
@@ -101,23 +103,47 @@ class MapState:
         self.focus_id = None
 
 
+    def add_selected_location_marker(self, map: folium.Map):
+        if self.selected_location:
+            print("ENTERED selected location marker addition")
+            folium.Marker(
+                location=self.selected_location,
+                tooltip="Selected location",
+                icon=folium.Icon(color="blue", icon="map-marker")
+            ).add_to(map)
+
+
     # render and return the folium map
     def build_map(self) -> folium.Map:
 
-        if self.isochrones == {}:
-            map = folium.Map(location = self.origin, zoom_start=6, min_zoom=2)
+        # start with the origin location
+        map = folium.Map(location = self.origin, zoom_start=6, min_zoom=2)
 
-        else:
-            # load all the isochrones in the dict to the map, set the focus of the map based on the last added isochrone 
-            # or last clicked location if thats more recent
+        # Inject FA 6 (Font Awesone 6) CSS for specific icons   
+        # Always inject FA6 once per map
+        fa6_href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        map.get_root().html.add_child(folium.Element(f'<link rel="stylesheet" href="{fa6_href}">'))
+
+
+        # add each isochrone layer to the map
+        for id, isochrone in self.isochrones.items():
+            add_isochrone_layer(map=map, layer=isochrone)
+
+
+        # if last action was a search address or map click, center on that location
+        if self.selected_location:
+            print(f"selected location: {self.selected_location}")
+            #map = folium.Map(location=self.selected_location, zoom_start=10, min_zoom=2)
+            self.add_selected_location_marker(map)
+            map.location = self.selected_location
+            map.zoom_start = 10
+        # else if there are isochrones, center on the focused one
+        elif self.focus_id and self.focus_id in self.isochrones:
             print(f"focus id: {self.focus_id}")
             print(f"center : {self.isochrones[self.focus_id].center}")
-            map = folium.Map(location=self.isochrones[self.focus_id].center, zoom_start=13, min_zoom=2)
-            
-
-        for id, isochrone in self.isochrones.items():
-            # call the plot for each isochrone
-            add_isochrone_layer(map=map, layer=isochrone)
+            #map = folium.Map(location=self.isochrones[self.focus_id].center, zoom_start=10, min_zoom=2)
+            map.location = self.isochrones[self.focus_id].center
+            map.zoom_start = self.isochrones[self.focus_id].map_zoom
 
 
         return map
