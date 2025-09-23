@@ -50,7 +50,8 @@ START_LAT = 51.5
 START_LON = 0
 
 
-
+print("START OF APP")
+print("===================================")
 
 ###################################################################################################
 
@@ -73,11 +74,15 @@ if "map_session_state" not in st.session_state:
 
 
 
+# a warning to show if no starting location has been set before generating an isochrone
+if "location_warning" not in st.session_state:
+    st.session_state.location_warning = False
 
 
 
-
-
+# maybe change this to reset search later on
+if "reset_address" not in st.session_state:
+    st.session_state.reset_address = True
 
 if "search_warning" not in st.session_state:
     st.session_state.search_warning = False
@@ -91,6 +96,9 @@ print(f"show warning: {st.session_state.search_warning} ")
 # Sidebar
 
 #####################################]
+
+
+# To handle the toggle between address search and map click to set starting location
 
 # set the previous search mode to watch for changes
 prev_use_map = st.session_state.map_session_state.use_map
@@ -108,6 +116,7 @@ if st.session_state.map_session_state.use_map != prev_use_map:
     st.session_state.reset_address = True # reset the address input box when switching to map click mode
     st.session_state.search_warning = False # clear any warnings when switching modes
     st.session_state.duplicate_isochrone_warning = False # clear duplicate warning when switching modes
+    st.session_state.location_warning = False # clear location warning when switching modes
     print("clearing selected location")
     print(f"selected location after clearing: {st.session_state.map_session_state.selected_location}")
 
@@ -115,9 +124,8 @@ if st.session_state.map_session_state.use_map != prev_use_map:
 
 # warnings and resets 
 
-# maybe change this to reset search later on
-if "reset_address" not in st.session_state:
-    st.session_state.reset_address = True
+
+# CAN MOVE THIS INTO A WITH ST.SIDEBAR BLOCK LATER
 
 # Creating the address str in session state so we can reset it after search
 #if "address_str" not in st.session_state:
@@ -136,6 +144,12 @@ if st.session_state.duplicate_isochrone_warning:
     st.sidebar.warning("Isochrone at this location with these parameters already exists.")
 
 print(f"duplicate warning after: {st.session_state.duplicate_isochrone_warning}")
+
+
+print(f"location warning: {st.session_state.location_warning} ")
+if st.session_state.location_warning:
+    st.sidebar.warning("No location set. Please search for an address or click on the map to set a location.")
+print(f"location warning after: {st.session_state.location_warning} ")
 
 
 
@@ -236,7 +250,8 @@ if find_address:
 
         st.session_state.last_searched = st.session_state.address_str.strip() # maybe we want to store search address for isochrone
 
-
+        # reset warnings
+        st.session_state.location_warning = False
         st.session_state.search_warning = False
     else:
         print("turning search warning on")
@@ -270,6 +285,7 @@ if submitted:
         st.session_state.show_warning = False
     else:
         print("no location set")
+        st.session_state.location_warning = True
         # change to no location set warning
         #st.session_state.show_warning = True
     
@@ -332,9 +348,9 @@ st.write("Last Clicked:")
 st_data['last_clicked']
 
 if st.session_state.map_session_state.use_map and st_data['last_clicked']:
-    st.session_state.map_state_tmp = st_data['last_clicked']
 
     st.session_state.map_session_state.selected_location = (st_data['last_clicked']['lat'], st_data['last_clicked']['lng']) # (lat, lon) tuple for folium
+    st.session_state.location_warning = False # clear location warning if it was on
     st.rerun()
 
 

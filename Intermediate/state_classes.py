@@ -18,7 +18,9 @@ class IsochroneLayerState:
     time_allowance_mins: int = None # this 
 
     def __post_init__(self):
-
+        if self.map_zoom is None:
+            self.map_zoom = 10
+            
         # set the isochrone color to match the marker color if not specified
         if self.isochrone_color:
             self.isochrone_color = FOLIUM_MARKER_COLORS[self.isochrone_color]
@@ -52,7 +54,7 @@ class MapState:
 
 
     def add_isochrone(self, geojson, marker_color='blue', 
-                      isochrone_color=None, map_zoom=13, transport_mode='car', time_allowance_mins = 30):
+                      isochrone_color=None, map_zoom=None, transport_mode='car', time_allowance_mins = 30):
         
 
         # need to add some default randomness for the marker and isochrone colors when there are multiple isochrones and not specified
@@ -165,6 +167,7 @@ class MapState:
         # add each isochrone layer to the map
         for id, isochrone in self.isochrones.items():
             add_isochrone_layer(map=map, layer=isochrone)
+
 
 
         return map
