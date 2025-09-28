@@ -20,7 +20,7 @@ class IsochroneLayerState:
     def __post_init__(self):
         if self.map_zoom is None:
             self.map_zoom = 10
-            
+
         # set the isochrone color to match the marker color if not specified
         if self.isochrone_color:
             self.isochrone_color = FOLIUM_MARKER_COLORS[self.isochrone_color]
@@ -113,7 +113,8 @@ class MapState:
             folium.Marker(
                 location=self.selected_location,
                 tooltip="Selected location",
-                icon=folium.Icon(prefix='fa', icon="car", color="blue")
+                icon=folium.Icon(prefix='fa-regular fa', icon="flag", color="red")#,
+                #size='large'
             ).add_to(map)
 
 
@@ -137,30 +138,24 @@ class MapState:
     # render and return the folium map
     def build_map(self) -> folium.Map:
 
-        # start with the origin location
-        #map = folium.Map(location = self.origin, zoom_start=6, min_zoom=2)
-
-
         # if last action was a search address or map click, center on that location
         if self.selected_location:
+            
             print(f"selected location: {self.selected_location}")
-            #map = folium.Map(location=self.selected_location, zoom_start=10, min_zoom=2)
             map = self._create_base_map(location=self.selected_location, zoom=10, min_zoom=2)
             self.add_selected_location_marker(map)
-            #map.location = self.selected_location
-            #map.zoom_start = 10
+
         # else if there are isochrones, center on the focused one
         elif self.focus_id and self.focus_id in self.isochrones:
+            
             print(f"focus id: {self.focus_id}")
             print(f"center : {self.isochrones[self.focus_id].center}")
-            #map = folium.Map(location=self.isochrones[self.focus_id].center, zoom_start=10, min_zoom=2)
             map = self._create_base_map(location=self.isochrones[self.focus_id].center, 
                                         zoom=self.isochrones[self.focus_id].map_zoom,  # map this depend on the area of the isochrone later on?
                                         min_zoom=2)
-            #map.location = self.isochrones[self.focus_id].center
-            #map.zoom_start = self.isochrones[self.focus_id].map_zoom
+        
         else:
-            #map = folium.Map(location=self.origin, zoom_start=6, min_zoom=2)
+        
             map = self._create_base_map(location=self.origin, zoom=6, min_zoom=2)
 
 
