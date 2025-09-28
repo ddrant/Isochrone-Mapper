@@ -206,36 +206,55 @@ with st.sidebar:
     #with st.form("search_form"):
 
         
-
+        with st.container(border=True):
         
     
-        # Address search box
-        st.text_input('Search', placeholder="address", key="address_str", 
-                      disabled=st.session_state.map_session_state.use_map,
-                      on_change=on_address_search_change)
+            # Address search box
+            st.text_input('Address Search', placeholder="address", key="address_str", 
+                          disabled=st.session_state.map_session_state.use_map,
+                          on_change=on_address_search_change,
+                          icon=":material/map_search:"
+                          )
 
 
-        # country selectbox for address search
-        country_search = st.selectbox(
-            "Select the country",
-            options = sorted(COUNTRY_TO_ALPHA2.keys()),
-            index=233,
-            disabled=st.session_state.map_session_state.use_map
-        )
-
-        #find_address = st.form_submit_button("Find Address", disabled=st.session_state.map_session_state.use_map, use_container_width=True)
-        
-        find_address = st.button("Find Address", disabled=st.session_state.map_session_state.use_map, use_container_width=True)
-        # previous searches selectbox or suggestions
-        st.selectbox(
-            "or previous searches", 
-            options= [None] + st.session_state.search_history,
-            index=0, 
-            key="selected_history",
-            format_func=lambda x: f"{x['address']}, {x['country']}" if x and x['address'] else "",
-            disabled=st.session_state.map_session_state.use_map,
-            on_change=on_previous_search_change
+            # country selectbox for address search
+            country_search = st.selectbox(
+                "Select the country",
+                options = sorted(COUNTRY_TO_ALPHA2.keys()),
+                index=233,
+                disabled=st.session_state.map_session_state.use_map
             )
+
+            #find_address = st.form_submit_button("Find Address", disabled=st.session_state.map_session_state.use_map, use_container_width=True)
+
+            find_address = st.button("Find Address", disabled=st.session_state.map_session_state.use_map, use_container_width=True)
+            # previous searches selectbox or suggestions
+            
+            #st.markdown("""
+            #    <style>
+            #    /* Center the label text ONLY for the 'selected_history' selectbox */
+            #    label[for="selected_history"] > div:first-child {
+            #        text-align: center !important;
+            #        width: 100% !important;
+            #        font-size: 32px !important;
+            #        color: red !important;
+            #        background: yellow !important;
+            #        border: 2px solid blue !important;
+            #    }
+            #    </style>
+            #    """, unsafe_allow_html=True)
+            st.selectbox(
+                ":material/history: Previous Searches", 
+                options= [None] + st.session_state.search_history,
+                index=0, 
+                key="selected_history",
+                format_func=lambda x: f"{x['address']}, {x['country']}" if x and x['address'] else "",
+                disabled=st.session_state.map_session_state.use_map,
+                on_change=on_previous_search_change,
+                label_visibility="visible"
+                )
+
+
 
         st.markdown("---")
 
@@ -403,10 +422,54 @@ col1, col2 = st.columns([4,1])
 ######
 
 with col1: 
-    # call to render Folium map in Streamlit
+
     st_data = st_folium(map, height=700, use_container_width=True)
 
 
+
+
+
+
+
+def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
+    lat, lon = center
+    st.markdown(f"""
+    <div style='margin-bottom: -5px;'>
+        <strong>ID:</strong> {isochrone_id}
+    </div>
+    <div style='margin-bottom: -5px;'>
+        <strong>Center:</strong> {lat:.4f}, {lon:.4f}
+    </div>
+    <div style='margin-bottom: -5px;'>
+        <strong>Time:</strong> {time_minutes} min
+    </div>
+    <div style='margin-bottom: 25px;'>
+        <strong>Mode:</strong> {transport_mode}
+    </div>
+    """, unsafe_allow_html=True)
+
+
+
+
+
+
+with col2:
+    st.markdown("### Isochrones Added")
+    with st.expander("See details", expanded=True):
+        if st.session_state.map_session_state.isochrones:
+            for id, isochrone in st.session_state.map_session_state.isochrones.items():
+                with st.container(border=True, gap=None):
+                #    col1_iso, col2_iso = st.columns([1,7], gap="small")
+                #    col1_iso.write(f":small[id: {id}]")
+                #    col2_iso.markdown(f":small[lat: {isochrone.lat}] \r :small[lon: {isochrone.lon}]")
+                #    col3_iso, col4_iso = st.columns([1,1])
+                #    col3_iso.write(isochrone.transport_mode)
+                #    col4_iso.button("focus", key=f"focus_iso_{id}", )
+                    render_isochrone_card(isochrone_id= id, center=isochrone.center, transport_mode=isochrone.transport_mode, time_minutes=isochrone.time_allowance_mins)
+                    st.button("focus", key=f"focus_iso_{id}")
+                
+        else:
+            st.markdown("No isochrones added yet.")
 
 
 if st.session_state.reset_last_clicked:

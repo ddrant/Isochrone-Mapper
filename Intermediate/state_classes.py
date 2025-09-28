@@ -5,6 +5,8 @@ import folium
 from dataclasses import dataclass, field
 from typing import OrderedDict, Optional, Tuple
 from constants import FOLIUM_MARKER_COLORS
+from folium.plugins import MiniMap, MousePosition
+
 
 
 @dataclass
@@ -158,7 +160,10 @@ class MapState:
         
             map = self._create_base_map(location=self.origin, zoom=6, min_zoom=2)
 
-
+#        folium.TileLayer("CartoDB dark_matter").add_to(map)
+ #       folium.TileLayer("CartoDB positron").add_to(map)
+        MousePosition().add_to(map)
+        MiniMap(toggle_display=True).add_to(map)
         # add each isochrone layer to the map
         for id, isochrone in self.isochrones.items():
             add_isochrone_layer(map=map, layer=isochrone)
