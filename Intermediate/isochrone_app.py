@@ -58,9 +58,9 @@ print("===================================")
 # START OF APP/UI CODE
 
 ###################################################################################################
+st.metric("time", 30, delta=-0.5)
 
-
-st.title("Generate youre Isochrone")
+st.title("Generate your Isochrone")
 #st.header("How far can you travel?")
 
 
@@ -430,23 +430,40 @@ with col1:
 
 
 
-
+## edit some of this later on. need changes to emojis still, mapping emojis to the value of the params (eg id 1,2,3,4,5)
+# have the background and border color to match the isochrones
 def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
+    st.markdown(
+    """
+    <style>
+    .custom-container {
+    background-color: #f0f8ff; /* Light blue */ 
+    padding: 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    margin-top: -15px;
+    border: 2px solid #4682b4; /* Steel blue border */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+    )
+    
     lat, lon = center
-    st.markdown(f"""
-    <div style='margin-bottom: -5px;'>
-        <strong>ID:</strong> {isochrone_id}
+    st.markdown(f"""<div class="custom-container">
+    <div style='margin: -3px; margin-left: -4px; margin-top: -10px; font-size: 20px'>
+        <strong>1️⃣:</strong> {isochrone_id}
     </div>
-    <div style='margin-bottom: -5px;'>
-        <strong>Center:</strong> {lat:.4f}, {lon:.4f}
+    <div style='margin-bottom: -3px;'>
+        <strong>🎯📍:</strong> {lat:.4f}, {lon:.4f}
     </div>
-    <div style='margin-bottom: -5px;'>
-        <strong>Time:</strong> {time_minutes} min
+    <div style='margin-bottom: -3px;'>
+        <strong>⏱️: </strong> {time_minutes} min
     </div>
-    <div style='margin-bottom: 25px;'>
+    <div style='margin-bottom: -10px;'>
         <strong>Mode:</strong> {transport_mode}
     </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
 
 
@@ -455,18 +472,31 @@ def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
 
 with col2:
     st.markdown("### Isochrones Added")
+    st.markdown("""
+        <style>
+        /* Target the inner container of the expander */
+        div[data-testid="stExpander"] > div {
+            background-color: #f0f0f5;  /* your custom background */
+            border-radius: 12px;
+            padding: 10px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
     with st.expander("See details", expanded=True):
         if st.session_state.map_session_state.isochrones:
             for id, isochrone in st.session_state.map_session_state.isochrones.items():
-                with st.container(border=True, gap=None):
+                #with st.container(border=True, gap=None, ):
                 #    col1_iso, col2_iso = st.columns([1,7], gap="small")
                 #    col1_iso.write(f":small[id: {id}]")
                 #    col2_iso.markdown(f":small[lat: {isochrone.lat}] \r :small[lon: {isochrone.lon}]")
                 #    col3_iso, col4_iso = st.columns([1,1])
                 #    col3_iso.write(isochrone.transport_mode)
                 #    col4_iso.button("focus", key=f"focus_iso_{id}", )
-                    render_isochrone_card(isochrone_id= id, center=isochrone.center, transport_mode=isochrone.transport_mode, time_minutes=isochrone.time_allowance_mins)
-                    st.button("focus", key=f"focus_iso_{id}")
+                render_isochrone_card(isochrone_id= id, center=isochrone.center, transport_mode=isochrone.transport_mode, time_minutes=isochrone.time_allowance_mins)
+                col1, col2, col3 = st.columns([3,3,2])
+                col1.button("focus", key=f"focus_iso_{id}")
+                col3.color_picker("color", key=f"color_{id}",label_visibility='collapsed', on_change="",value="#add8fc") # add on change
+                #st.markdown("---")
                 
         else:
             st.markdown("No isochrones added yet.")
@@ -481,7 +511,24 @@ if st.session_state.map_session_state.use_map and st_data['last_clicked']:
     st.session_state.map_session_state.selected_location = (st_data['last_clicked']['lat'], st_data['last_clicked']['lng']) # (lat, lon) tuple for folium
     st.rerun()
 
+st.color_picker("tset", width=1)
 
+st.markdown(
+"""
+<style>
+.custom-container {
+background-color: #f0f8ff; /* Light blue */
+padding: 20px;
+border-radius: 10px;
+border: 2px solid #4682b4; /* Steel blue border */
+}
+</style>
+""",
+unsafe_allow_html=True,
+)
+
+# Use the custom class in a container
+st.markdown(f'<div class="custom-container">This is a colored container! {st.button("help")}</div>', unsafe_allow_html=True)
 
 st_data
 
