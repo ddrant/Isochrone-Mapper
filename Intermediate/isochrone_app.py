@@ -126,7 +126,9 @@ def on_previous_search_change():
 
 
 
-
+def reset_selected_history():
+    if st.session_state.selected_history is not None:
+        st.session_state.selected_history = None
 
 
 
@@ -176,6 +178,7 @@ if st.session_state.map_session_state.use_map != prev_use_map:
 #if "address_str" not in st.session_state:
 if st.session_state.reset_address:
     st.session_state.address_str = ""
+    reset_selected_history()
     st.session_state.reset_address = False
 
 # no search results warning
@@ -388,6 +391,7 @@ if submitted:
     # set the reset address flag to true to reset the address input box
     st.session_state.reset_address = True
 
+
     st.rerun() # rerun the app to reset the address input box and show warning if needed
 
 
@@ -451,8 +455,8 @@ def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
     
     lat, lon = center
     st.markdown(f"""<div class="custom-container">
-    <div style='margin: -3px; margin-left: -4px; margin-top: -10px; font-size: 20px'>
-        <strong>1️⃣:</strong> {isochrone_id}
+    <div style='margin-bottom: -2px; margin-left: -3px; margin-top: -10px; font-size: 20px'>
+        <strong>1️⃣</strong><strong> 🎯:</strong> {lat:.4f}, {lon:.4f}
     </div>
     <div style='margin-bottom: -3px;'>
         <strong>🎯📍:</strong> {lat:.4f}, {lon:.4f}
@@ -471,7 +475,7 @@ def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
 
 
 with col2:
-    st.markdown("### Isochrones Added")
+    #st.markdown("### Isochrones Added")
     st.markdown("""
         <style>
         /* Target the inner container of the expander */
@@ -482,7 +486,7 @@ with col2:
         }
         </style>
         """, unsafe_allow_html=True)
-    with st.expander("See details", expanded=True):
+    with st.expander("Current Plots", expanded=True):
         if st.session_state.map_session_state.isochrones:
             for id, isochrone in st.session_state.map_session_state.isochrones.items():
                 #with st.container(border=True, gap=None, ):
