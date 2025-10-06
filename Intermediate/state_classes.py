@@ -69,6 +69,7 @@ class MapState:
             time_allowance_mins=time_allowance_mins
             )
         
+        # to check for duplicates (exact same params)
         for layer in self.isochrones.values():
             if (
                 layer.center == new_layer.center and
@@ -108,6 +109,9 @@ class MapState:
         self.markers.clear()
         self.focus_id = None
 
+    def select_isochrone(self, id: int):
+        self.selected_location = self.isochrones[id].center
+        self.focus_id = id
 
     def add_selected_location_marker(self, map: folium.Map):
         if self.selected_location:

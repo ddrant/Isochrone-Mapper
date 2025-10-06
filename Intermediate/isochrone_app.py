@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 import folium
 from streamlit_folium import st_folium # to use foliumn with streamlit
-
+from functools import partial
 
 if "counter" not in st.session_state:
     st.session_state.counter = 0
@@ -21,6 +21,14 @@ if "counter" not in st.session_state:
 st.session_state.counter += 1
 
 st.session_state.counter
+
+
+
+
+
+
+
+
 
 
 ########################################
@@ -40,6 +48,46 @@ st.set_page_config(page_title="Isochrone Map", layout="wide", initial_sidebar_st
 
 
 
+
+
+
+
+
+
+
+#################
+
+# CSS STYLING 
+
+#################
+
+
+css_specific_button = """
+    <style>
+    /* Target button by key name (span id="type-name") */
+    .element-container:has(#remove-button) + div button {
+        background-color: #ff4d4d !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+    }
+    </style>
+    """
+# Custom CSS for a red "Remove" button
+st.markdown(css_specific_button, unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
 ############################################
 
 # CONSTANTS 
@@ -52,6 +100,17 @@ START_LON = 0
 
 print("START OF APP")
 print("===================================")
+
+
+
+
+
+
+
+
+
+
+
 
 ###################################################################################################
 
@@ -138,7 +197,7 @@ def reset_selected_history():
 
 #####################################
 
-# Sidebar
+# Sidebar WARNINGS
 
 #####################################]
 
@@ -204,8 +263,11 @@ print(f"location warning after: {st.session_state.location_warning} ")
 
 
 
+#############################
 
-# functionality 
+# SIDEBAR functionality 
+
+#############################
 
 with st.sidebar:
     #with st.form("search_form"):
@@ -287,6 +349,8 @@ with st.sidebar:
 
    #submitted = st.button("Find address and Generate Isochrone", use_container_width=True, disabled=use_map_toggle)
     
+        # REMOVE LAST ISOCHRONE BUTTON
+        st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
         remove_last = st.sidebar.button("Remove last isochrone", use_container_width=True)
 
 
@@ -297,6 +361,7 @@ with st.sidebar:
 # main?
 
 ##########################################
+
 help = st.popover('Test')
 
 with help:
@@ -435,6 +500,13 @@ with col1:
 
 
 
+#################################
+
+# ISOCHRONE CURRENT PLOTS SIDEBAR
+
+#################################
+
+# function can be moved
 
 ## edit some of this later on. need changes to emojis still, mapping emojis to the value of the params (eg id 1,2,3,4,5)
 # have the background and border color to match the isochrones
@@ -445,8 +517,10 @@ def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
     .custom-container {
     background-color: #f0f8ff; /* Light blue */ 
     padding: 10px;
-    border-radius: 20px;
+    border-radius: 5px;
     margin-bottom: 10px;
+    margin-left: -5px;
+    margin-right: -5px;
     margin-top: -15px;
     border: 2px solid #4682b4; /* Steel blue border */
     }
@@ -475,34 +549,27 @@ def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
 
 
 
-
 with col2:
-    #st.markdown("### Isochrones Added")
-    st.markdown("""
-        <style>
-        /* Target the inner container of the expander */
-        div[data-testid="stExpander"] > div {
-            background-color: #f0f0f5;  /* your custom background */
-            border-radius: 12px;
-            padding: 10px;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+    #st.markdown("""
+    #    <style>
+    #    /* Target the inner container of the expander */
+    #    div[data-testid="stExpander"] > div {
+    #        background-color: #f0f0f5;  /* your custom background */
+    #        border-radius: 12px;
+    #        padding: 10px;
+    #    }
+    #    </style>
+    #    """, unsafe_allow_html=True)
     with st.expander("Current Plots", expanded=True):
         if st.session_state.map_session_state.isochrones:
             for id, isochrone in st.session_state.map_session_state.isochrones.items():
-                #with st.container(border=True, gap=None, ):
-                #    col1_iso, col2_iso = st.columns([1,7], gap="small")
-                #    col1_iso.write(f":small[id: {id}]")
-                #    col2_iso.markdown(f":small[lat: {isochrone.lat}] \r :small[lon: {isochrone.lon}]")
-                #    col3_iso, col4_iso = st.columns([1,1])
-                #    col3_iso.write(isochrone.transport_mode)
-                #    col4_iso.button("focus", key=f"focus_iso_{id}", )
                 render_isochrone_card(isochrone_id= id, center=isochrone.center, transport_mode=isochrone.transport_mode, time_minutes=isochrone.time_allowance_mins)
-                col1, col2, col3 = st.columns([3,3,2])
-                col1.button("focus", key=f"focus_iso_{id}")
+                col1, col2, col3 = st.columns([3,4,2])
+                col1.button("focus", key=f"focus_iso_{id}", on_click=partial(st.session_state.map_session_state.select_isochrone, id), use_container_width=True)
                 col3.color_picker("color", key=f"color_{id}",label_visibility='collapsed', on_change="",value="#add8fc") # add on change
                 #st.markdown("---")
+                st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+                col2.button("Remove", use_container_width=True)
                 
         else:
             st.markdown("No isochrones added yet.")
@@ -517,25 +584,55 @@ if st.session_state.map_session_state.use_map and st_data['last_clicked']:
     st.session_state.map_session_state.selected_location = (st_data['last_clicked']['lat'], st_data['last_clicked']['lng']) # (lat, lon) tuple for folium
     st.rerun()
 
-st.color_picker("tset", width=1)
 
-st.markdown(
-"""
-<style>
-.custom-container {
-background-color: #f0f8ff; /* Light blue */
-padding: 20px;
-border-radius: 10px;
-border: 2px solid #4682b4; /* Steel blue border */
-}
-</style>
-""",
-unsafe_allow_html=True,
-)
+#st.markdown(
+#"""
+#<style>
+#.custom-container {
+#background-color: #f0f8ff; /* Light blue */
+#padding: 20px;
+#border-radius: 10px;
+#border: 2px solid #4682b4; /* Steel blue border */
+#}
+#</style>
+#""",
+#unsafe_allow_html=True,
+#)
 
 # Use the custom class in a container
-st.markdown(f'<div class="custom-container">This is a colored container! {st.button("help")}</div>', unsafe_allow_html=True)
+#st.markdown(f'<div class="custom-container">This is a colored container! {st.button("help")}</div>', unsafe_allow_html=True)
 
 st_data
 
 
+css_specific_button = """
+    <style>
+    /* Target button by key name (span id="type-name") */
+    .element-container:has(#remove-button1) + div button {
+        background-color: #ff4d4d !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+    }
+    </style>
+    """
+# Custom CSS for a red "Remove" button
+st.markdown(css_specific_button, unsafe_allow_html=True)
+st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+
+st.button("Remove", key="remove_iso_3")
+
+css_button_tst = """
+    <style>
+    .element-container:nth-of-type(1) button {
+        background-color: #3498db !important;
+        color: white !important;
+        border-radius: 5px !important;
+        border: none !important;
+    }
+    </style>
+    """
+
+#st.markdown(css_button_tst, unsafe_allow_html=True)
+st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+st.button("gi")
