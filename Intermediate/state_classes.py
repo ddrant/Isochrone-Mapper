@@ -145,7 +145,6 @@ class MapState:
             
             print(f"selected location: {self.selected_location}")
             map = self._create_base_map(location=self.selected_location, zoom=10, min_zoom=2)
-            self.add_selected_location_marker(map)
 
         # else if there are isochrones, center on the focused one
         elif self.focus_id and self.focus_id in self.isochrones:
@@ -169,6 +168,8 @@ class MapState:
             add_isochrone_layer(map=map, layer=isochrone)
 
 
+        # add the selected location marker last so its on top
+        self.add_selected_location_marker(map)
 
         return map
 

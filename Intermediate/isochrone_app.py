@@ -123,6 +123,8 @@ def on_previous_search_change():
         print(st.session_state.selected_history["coords"])
         print("previous search change")
         print(f"address str after change: {st.session_state.address_str}")
+    else:
+        st.session_state.map_session_state.selected_location = None
 
 
 
