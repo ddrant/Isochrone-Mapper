@@ -78,7 +78,19 @@ st.markdown(css_specific_button, unsafe_allow_html=True)
 
 
 
-
+css_specific_button2 = """
+    <style>
+    /* Target button by key name (span id="type-name") */
+    .element-container:has(.remove-button) + div button {
+        background-color: #ff4d4d !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+    }
+    </style>
+    """
+# Custom CSS for a red "Remove" button
+st.markdown(css_specific_button2, unsafe_allow_html=True)
 
 
 
@@ -516,12 +528,13 @@ def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
     <style>
     .custom-container {
     background-color: #f0f8ff; /* Light blue */ 
-    padding: 10px;
+    padding: 30px;
     border-radius: 5px;
-    margin-bottom: 10px;
+    height: 220px;
+    margin-bottom: -70px;
     margin-left: -5px;
     margin-right: -5px;
-    margin-top: -15px;
+    margin-top: 0px;
     border: 2px solid #4682b4; /* Steel blue border */
     }
     </style>
@@ -563,16 +576,19 @@ with col2:
     with st.expander("Current Plots", expanded=True):
         if st.session_state.map_session_state.isochrones:
             for id, isochrone in st.session_state.map_session_state.isochrones.items():
+                
                 render_isochrone_card(isochrone_id= id, center=isochrone.center, transport_mode=isochrone.transport_mode, time_minutes=isochrone.time_allowance_mins)
                 col1, col2, col3 = st.columns([3,4,2])
                 col1.button("focus", key=f"focus_iso_{id}", on_click=partial(st.session_state.map_session_state.select_isochrone, id), use_container_width=True)
                 col3.color_picker("color", key=f"color_{id}",label_visibility='collapsed', on_change="",value="#add8fc") # add on change
                 #st.markdown("---")
-                st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
-                col2.button("Remove", use_container_width=True)
+                col2.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+                col2.button("Remove", key=f"remove_iso_{id}", use_container_width=True)
                 
         else:
             st.markdown("No isochrones added yet.")
+            st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+            st.button("Remove", key=f"remove_iso_last", use_container_width=True)
 
 
 if st.session_state.reset_last_clicked:
@@ -618,21 +634,21 @@ css_specific_button = """
     """
 # Custom CSS for a red "Remove" button
 st.markdown(css_specific_button, unsafe_allow_html=True)
-st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
 
 st.button("Remove", key="remove_iso_3")
-
-css_button_tst = """
-    <style>
-    .element-container:nth-of-type(1) button {
-        background-color: #3498db !important;
-        color: white !important;
-        border-radius: 5px !important;
-        border: none !important;
-    }
-    </style>
-    """
+#
+#css_button_tst = """
+#    <style>
+#    .element-container:nth-of-type(1) button {
+#        background-color: #3498db !important;
+#        color: white !important;
+#        border-radius: 5px !important;
+#        border: none !important;
+#    }
+#    </style>
+#    """
 
 #st.markdown(css_button_tst, unsafe_allow_html=True)
-st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+#st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
 st.button("gi")
