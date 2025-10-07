@@ -70,22 +70,25 @@ css_specific_button = """
         color: white !important;
         font-weight: bold !important;
         border-radius: 8px !important;
+        margin-top: -80px !important;
     }
     </style>
     """
 # Custom CSS for a red "Remove" button
-st.markdown(css_specific_button, unsafe_allow_html=True)
+#st.markdown(css_specific_button, unsafe_allow_html=True)
 
 
+# maybe dont need nice to have if error
 
 css_specific_button2 = """
     <style>
-    /* Target button by key name (span id="type-name") */
+    /* Target button by key name (class="type-name") */
     .element-container:has(.remove-button) + div button {
         background-color: #ff4d4d !important;
         color: white !important;
         font-weight: bold !important;
         border-radius: 8px !important;
+        margin-top: -80px !important;
     }
     </style>
     """
@@ -362,7 +365,7 @@ with st.sidebar:
    #submitted = st.button("Find address and Generate Isochrone", use_container_width=True, disabled=use_map_toggle)
     
         # REMOVE LAST ISOCHRONE BUTTON
-        st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+        st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
         remove_last = st.sidebar.button("Remove last isochrone", use_container_width=True)
 
 
@@ -528,14 +531,14 @@ def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
     <style>
     .custom-container {
     background-color: #f0f8ff; /* Light blue */ 
-    padding: 30px;
-    border-radius: 5px;
-    height: 220px;
-    margin-bottom: -70px;
+    padding: 20px;
+    padding-bottom: 70px;
+    border-radius: 8px;
+    margin-bottom: -65px;
     margin-left: -5px;
     margin-right: -5px;
     margin-top: 0px;
-    border: 2px solid #4682b4; /* Steel blue border */
+    border: 1px solid #4682b4; /* Steel blue border */
     }
     </style>
     """,
@@ -582,12 +585,13 @@ with col2:
                 col1.button("focus", key=f"focus_iso_{id}", on_click=partial(st.session_state.map_session_state.select_isochrone, id), use_container_width=True)
                 col3.color_picker("color", key=f"color_{id}",label_visibility='collapsed', on_change="",value="#add8fc") # add on change
                 #st.markdown("---")
-                col2.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
-                col2.button("Remove", key=f"remove_iso_{id}", use_container_width=True)
+                col2.markdown('<span class="remove-button" style="height: 0px;">', unsafe_allow_html=True)
+                col2.button("Remove", key=f"remove_iso_{id}", use_container_width=True, on_click=partial(st.session_state.map_session_state.remove_isochrone, id))
+                col2.markdown('</span>', unsafe_allow_html=True)
                 
         else:
             st.markdown("No isochrones added yet.")
-            st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+            st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
             st.button("Remove", key=f"remove_iso_last", use_container_width=True)
 
 
@@ -621,19 +625,7 @@ if st.session_state.map_session_state.use_map and st_data['last_clicked']:
 st_data
 
 
-css_specific_button = """
-    <style>
-    /* Target button by key name (span id="type-name") */
-    .element-container:has(#remove-button1) + div button {
-        background-color: #ff4d4d !important;
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 8px !important;
-    }
-    </style>
-    """
-# Custom CSS for a red "Remove" button
-st.markdown(css_specific_button, unsafe_allow_html=True)
+
 st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
 
 st.button("Remove", key="remove_iso_3")
@@ -650,5 +642,5 @@ st.button("Remove", key="remove_iso_3")
 #    """
 
 #st.markdown(css_button_tst, unsafe_allow_html=True)
-#st.markdown('<span id="remove-button"></span>', unsafe_allow_html=True)
+#st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
 st.button("gi")
