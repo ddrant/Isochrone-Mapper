@@ -108,6 +108,7 @@ css_specific_button2 = """
         border-radius: 8px !important;
         margin-top: 0px !important;
         margin-bottom: 10px !important;
+        min-width: 96px !important;
     }
     </style>
     """
@@ -125,6 +126,78 @@ st.markdown(css_specific_button2, unsafe_allow_html=True)
         display: none !important;   /* remove wrapper from layout → no gap */
         margin: 0 !important; padding: 0 !important;
     }"""
+
+
+css_specific_expander = """
+    <style>
+    /* Target button by key name (class="type-name") */
+    .element-container:has(.size-expander) + div expander {
+        background-color: #ff4d4d !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+        margin-top: 0px !important;
+        margin-bottom: 10px !important;
+        min-width: 250px !important;
+    }
+    </style>
+    """
+st.markdown(css_specific_expander, unsafe_allow_html=True)
+
+
+
+
+
+
+#st.markdown("""
+#<style>
+#/* 1) Lock the app to a fixed minimum width */
+#html, body, [data-testid="stAppViewContainer"], .block-container {
+#  min-width: 1400px !important;   /* pick your width: 1200–1600 usually feels right */
+#}
+#
+#/* 2) When the viewport is smaller than that, allow horizontal scroll */
+#[data-testid="stAppViewContainer"] {
+#  overflow-x: auto !important;
+#}
+#
+#/* 3) (Optional) keep the right panel a fixed width so it doesn't collapse */
+#.right-panel { width: 360px; }
+#div[data-testid="stHorizontalBlock"] > div:has(.right-panel) {
+#  flex: 0 0 360px !important;      /* don’t let Streamlit shrink this column */
+#}
+#
+#/* 4) (Optional) stop tiny sub-columns from collapsing */
+#div[data-testid="column"] {
+#  flex: 0 0 auto;                  /* no flex shrink */
+#  min-width: 120px;                /* buttons won’t wrap letter-by-letter */
+#}
+#
+#/* 5) (Optional) keep folium iframe from resizing with container width */
+#div[data-testid="stIFrame"] iframe {
+#  max-width: none !important;
+#}
+#</style>
+#""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+/* 1) Allow horizontal scroll at every level that can clip */
+html, body { overflow-x: auto !important; }
+[data-testid="stAppViewContainer"] { overflow-x: auto !important; }   /* main scroll area */
+section.main { overflow-x: auto !important; }                         /* safety */
+
+/* 2) Give the content a fixed minimum width so it won’t squash */
+.block-container { min-width: 1600px !important; }  /* pick your width (e.g., 1300–1600) */
+
+/* 3) Optional: keep folium iframe from shrinking/weird max-width behavior */
+div[data-testid="stIFrame"] iframe { min-width: 600px !important; }
+
+/* 4) Optional: prevent inner horizontal blocks from hiding overflow */
+div[data-testid="stHorizontalBlock"] { overflow: visible !important; }
+</style>
+""", unsafe_allow_html=True)
+
 
 
 
@@ -567,6 +640,7 @@ def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
     margin-right: -5px;
     margin-top: 0px;
     border: 1px solid #4682b4; /* Steel blue border */
+    min-width: 250px !important;
     }
     </style>
     """,
@@ -604,6 +678,17 @@ with col2:
     #    }
     #    </style>
     #    """, unsafe_allow_html=True)
+    st.markdown(
+    """
+    <style>
+    /* Target the st.expander container */
+    .element-container .streamlit-expander {
+        min-width: 280px; /* Set your desired minimum width */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+    )
     with st.expander("Current Plots", expanded=True):
         if st.session_state.map_session_state.isochrones:
             for id, isochrone in st.session_state.map_session_state.isochrones.items():
