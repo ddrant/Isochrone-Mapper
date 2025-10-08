@@ -78,7 +78,25 @@ css_specific_button = """
 #st.markdown(css_specific_button, unsafe_allow_html=True)
 
 
-# maybe dont need nice to have if error
+
+hook_remove_css = """
+    <style>
+    .element-container:has(style){
+        display: none;
+    }
+    .hook-remove{
+       display: none;
+    }
+    .element-container:has(.hook-remove){
+        display: none !important;   /* remove wrapper from layout → no gap */
+        margin: 0 !important; padding: 0 !important;
+    }
+    </style>
+    """
+st.markdown(hook_remove_css, unsafe_allow_html=True)
+
+
+# CLASS VERSION
 
 css_specific_button2 = """
     <style>
@@ -88,7 +106,8 @@ css_specific_button2 = """
         color: white !important;
         font-weight: bold !important;
         border-radius: 8px !important;
-        margin-top: -80px !important;
+        margin-top: 0px !important;
+        margin-bottom: 10px !important;
     }
     </style>
     """
@@ -96,7 +115,16 @@ css_specific_button2 = """
 st.markdown(css_specific_button2, unsafe_allow_html=True)
 
 
-
+"""    .element-container:has(style){
+        display: none;
+    }
+    .remove-button {
+       display: none;
+    }
+    .element-container:has(.remove-button){
+        display: none !important;   /* remove wrapper from layout → no gap */
+        margin: 0 !important; padding: 0 !important;
+    }"""
 
 
 
@@ -585,9 +613,8 @@ with col2:
                 col1.button("focus", key=f"focus_iso_{id}", on_click=partial(st.session_state.map_session_state.select_isochrone, id), use_container_width=True)
                 col3.color_picker("color", key=f"color_{id}",label_visibility='collapsed', on_change="",value="#add8fc") # add on change
                 #st.markdown("---")
-                col2.markdown('<span class="remove-button" style="height: 0px;">', unsafe_allow_html=True)
+                col2.markdown('<span class="hook-remove remove-button" style="height: 0px;"></span>', unsafe_allow_html=True)
                 col2.button("Remove", key=f"remove_iso_{id}", use_container_width=True, on_click=partial(st.session_state.map_session_state.remove_isochrone, id))
-                col2.markdown('</span>', unsafe_allow_html=True)
                 
         else:
             st.markdown("No isochrones added yet.")
@@ -644,3 +671,30 @@ st.button("Remove", key="remove_iso_3")
 #st.markdown(css_button_tst, unsafe_allow_html=True)
 #st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
 st.button("gi")
+
+st.button("button1")
+st.markdown(
+    """
+    <style>
+    .element-container:has(.button-after) + div button {
+        background-color: orange;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+st.button("button19")
+st.markdown('<span class="hook-remove button-after"></span>', unsafe_allow_html=True)
+st.button("My Button")
+#st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
+st.button("button2")
+
+    #    .element-container:has(style){
+    #    display: none;
+    #}
+    ##button-after {
+    #   display: none;
+    #}
+    #.element-container:has(#button-after) {
+    #    display: none;
+    #}
