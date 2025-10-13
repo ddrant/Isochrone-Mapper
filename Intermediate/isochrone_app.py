@@ -15,6 +15,17 @@ import folium
 from streamlit_folium import st_folium # to use foliumn with streamlit
 from functools import partial
 
+
+from streamlit_js_eval import streamlit_js_eval
+
+#info = get_window_info()
+#win_w = info.get("innerWidth")
+#st.write(win_w)
+
+
+
+
+
 if "counter" not in st.session_state:
     st.session_state.counter = 0
 
@@ -39,14 +50,44 @@ st.session_state.counter
 
 
 
-st.set_page_config(page_title="Isochrone Map", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Isochrone Map", initial_sidebar_state="expanded", layout='wide')
 
 
 ################
 # LOAD OpenRouteService API KEY
 ################
 
+st.markdown("""
+    <style>
+        .aspect-ratio-box {
+            position: relative;
+            width: 100%;
+            max-width: 1600px;
+            margin: auto;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        }
 
+        .aspect-ratio-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-color: #f0f0f0;
+            border: 2px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+    </style>
+
+    <div class="aspect-ratio-box">
+        <div class="aspect-ratio-content">
+            Fixed Aspect Ratio Content
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
 
 
@@ -116,17 +157,7 @@ css_specific_button2 = """
 st.markdown(css_specific_button2, unsafe_allow_html=True)
 
 
-"""    .element-container:has(style){
-        display: none;
-    }
-    .remove-button {
-       display: none;
-    }
-    .element-container:has(.remove-button){
-        display: none !important;   /* remove wrapper from layout → no gap */
-        margin: 0 !important; padding: 0 !important;
-    }"""
-
+#doesnt work?
 
 css_specific_expander = """
     <style>
@@ -142,12 +173,12 @@ css_specific_expander = """
     }
     </style>
     """
-st.markdown(css_specific_expander, unsafe_allow_html=True)
+#st.markdown(css_specific_expander, unsafe_allow_html=True)
 
 
 
 
-
+# this one below sets the min width of the main content but cuts off anything outside the window (invisible)
 
 #st.markdown("""
 #<style>
@@ -180,27 +211,50 @@ st.markdown(css_specific_expander, unsafe_allow_html=True)
 #</style>
 #""", unsafe_allow_html=True)
 
+
+
+# This one keeps everyhing same width (or at least min width) but then it cuts off the left side making it impossible to scroll over there
+# but right side good?
+
+ 
 st.markdown("""
 <style>
-/* 1) Allow horizontal scroll at every level that can clip */
-html, body { overflow-x: auto !important; }
-[data-testid="stAppViewContainer"] { overflow-x: auto !important; }   /* main scroll area */
-section.main { overflow-x: auto !important; }                         /* safety */
+
 
 /* 2) Give the content a fixed minimum width so it won’t squash */
-.block-container { min-width: 1600px !important; }  /* pick your width (e.g., 1300–1600) */
+.block-container { 
+        min-width: 1600px !important;
 
-/* 3) Optional: keep folium iframe from shrinking/weird max-width behavior */
-div[data-testid="stIFrame"] iframe { min-width: 600px !important; }
+        overflow: auto;
+             
+}  /* pick your width (e.g., 1300–1600) */
 
-/* 4) Optional: prevent inner horizontal blocks from hiding overflow */
-div[data-testid="stHorizontalBlock"] { overflow: visible !important; }
 </style>
 """, unsafe_allow_html=True)
 
+# in .block-container
+#         min-width: 1600px !important;
+#        width: 1600px !important;
+#        margin-left: 0 !important;     /* <-- stop centering */
+#        margin-right: 0 !important;
+#        padding-left: 1rem;            /* optional, keep some gutter */
+#        padding-right: 1rem;
 
 
 
+#/* 1) Allow horizontal scroll at every level that can clip */
+#html, body { overflow-x: visible !important; }
+#[data-testid="stAppViewContainer"] { overflow-x: visible !important; }   /* main scroll area */
+#section.main { overflow-x: visible !important;}                      /* safety */
+
+#/* 3) Optional: keep folium iframe from shrinking/weird max-width behavior */
+#div[data-testid="stIFrame"] iframe { min-width: 1200px !important;}
+
+#/* 4) Optional: prevent inner horizontal blocks from hiding overflow */
+#div[data-testid="stHorizontalBlock"] { overflow: visible !important; }
+#</style>
+
+# Fixed page width: pick what keeps your layout stable
 
 
 
@@ -678,17 +732,18 @@ with col2:
     #    }
     #    </style>
     #    """, unsafe_allow_html=True)
-    st.markdown(
-    """
-    <style>
-    /* Target the st.expander container */
-    .element-container .streamlit-expander {
-        min-width: 280px; /* Set your desired minimum width */
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-    )
+    #st.markdown(
+    #"""
+    #<style>
+    #/* Target the st.expander container */
+    #.element-container .streamlit-expander {
+    #    min-width: 280px; /* Set your desired minimum width */
+    #}
+    #</style>
+    #""",
+    #unsafe_allow_html=True
+    #)
+    st.markdown('<span class="hook-remove size-expander"></span>', unsafe_allow_html=True)
     with st.expander("Current Plots", expanded=True):
         if st.session_state.map_session_state.isochrones:
             for id, isochrone in st.session_state.map_session_state.isochrones.items():
@@ -703,9 +758,8 @@ with col2:
                 
         else:
             st.markdown("No isochrones added yet.")
-            st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
+            st.markdown('<span class="hook-remove remove-button"></span>', unsafe_allow_html=True)
             st.button("Remove", key=f"remove_iso_last", use_container_width=True)
-
 
 if st.session_state.reset_last_clicked:
     st_data['last_clicked'] = None
@@ -740,7 +794,7 @@ st_data
 
 st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
 
-st.button("Remove", key="remove_iso_3")
+st.button("Remove", key="remove_iso_93")
 #
 #css_button_tst = """
 #    <style>
@@ -783,3 +837,11 @@ st.button("button2")
     #.element-container:has(#button-after) {
     #    display: none;
     #}
+
+
+
+win_w = streamlit_js_eval(
+    js_expressions="window.innerWidth",
+    key="win_w",
+)
+st.write("window width:", win_w)
