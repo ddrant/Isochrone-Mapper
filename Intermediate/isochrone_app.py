@@ -16,22 +16,9 @@ from streamlit_folium import st_folium # to use foliumn with streamlit
 from functools import partial
 
 
-from streamlit_js_eval import streamlit_js_eval
-
-#info = get_window_info()
-#win_w = info.get("innerWidth")
-#st.write(win_w)
 
 
 
-
-
-if "counter" not in st.session_state:
-    st.session_state.counter = 0
-
-st.session_state.counter += 1
-
-st.session_state.counter
 
 
 
@@ -50,44 +37,13 @@ st.session_state.counter
 
 
 
-st.set_page_config(page_title="Isochrone Map", initial_sidebar_state="expanded", layout='wide')
+#st.set_page_config(page_title="Isochrone Map", initial_sidebar_state="expanded", layout='wide')
 
 
 ################
 # LOAD OpenRouteService API KEY
 ################
 
-st.markdown("""
-    <style>
-        .aspect-ratio-box {
-            position: relative;
-            width: 100%;
-            max-width: 1600px;
-            margin: auto;
-            padding-top: 56.25%; /* 16:9 Aspect Ratio */
-        }
-
-        .aspect-ratio-content {
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background-color: #f0f0f0;
-            border: 2px solid #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-    </style>
-
-    <div class="aspect-ratio-box">
-        <div class="aspect-ratio-content">
-            Fixed Aspect Ratio Content
-        </div>
-    </div>
-""", unsafe_allow_html=True)
 
 
 
@@ -217,20 +173,56 @@ css_specific_expander = """
 # but right side good?
 
  
+#st.markdown("""
+#<style>
+#
+#
+#/* 2) Give the content a fixed minimum width so it won’t squash */
+#.block-container { 
+#        min-width: 1600px !important;
+#        margin-left: 50px !important;
+#        overflow: auto;
+#             
+#}  /* pick your width (e.g., 1300–1600) */
+#
+#</style>
+#""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
+/* put the horizontal scrollbar on the whole page */
+html, body, #root, .stApp { overflow-x: auto !important; margin:0; padding:0; }
 
+/* kill inner scroll areas + centering */
+[data-testid="stAppViewContainer"], section.main, .block-container {
+  overflow-x: visible !important;
+  padding: 0 !important;
+  max-width: none !important;
+  min-width: 1950px;
+}
 
 /* 2) Give the content a fixed minimum width so it won’t squash */
 .block-container { 
-        min-width: 1600px !important;
 
-        overflow: auto;
+        margin-left: 355px !important;
+        
              
 }  /* pick your width (e.g., 1300–1600) */
 
+
+/* hard-fix the FIRST row’s two columns by px using a hook */
+div[data-testid="stHorizontalBlock"] > div:has(.col-map)   { flex: 0 0 1250px !important; max-width:1250px !important; }
+div[data-testid="stHorizontalBlock"] > div:has(.col-right) { flex: 0 0 300px  !important; max-width: 300px !important; }
+
+/* folium iframe must not auto-shrink */
+div[data-testid="stIFrame"] iframe { max-width: none !important; }
 </style>
 """, unsafe_allow_html=True)
+
+
+#/* fixed canvas width – pick values you like */
+##fixed-canvas { width: 1600px; min-width: 1600px;  }
+
 
 # in .block-container
 #         min-width: 1600px !important;
@@ -275,8 +267,7 @@ print("===================================")
 
 
 
-
-
+st.set_page_config(page_title="Isochrone Map", initial_sidebar_state="expanded", layout='wide')
 
 
 
@@ -287,8 +278,21 @@ print("===================================")
 # START OF APP/UI CODE
 
 ###################################################################################################
-st.metric("time", 30, delta=-0.5)
 
+
+st.markdown('<div id="fixed-canvas">', unsafe_allow_html=True)
+
+st.write("")
+st.write("")
+st.write("")
+if "counter" not in st.session_state:
+    st.session_state.counter = 0
+
+st.session_state.counter += 1
+
+st.session_state.counter
+
+st.metric("time", 30, delta=-0.5)
 st.title("Generate your Isochrone")
 #st.header("How far can you travel?")
 
@@ -663,9 +667,10 @@ col1, col2 = st.columns([4,1])
 ######
 
 with col1: 
-
+    st.markdown('<span class="hook-remove col-map"></span>', unsafe_allow_html=True)  # hook
+    st.markdown('<div style="width: 1040px;">', unsafe_allow_html=True)   # map width = column width
     st_data = st_folium(map, height=700, use_container_width=True)
-
+    #st.markdown('</div>', unsafe_allow_html=True)
 
 
 
@@ -743,7 +748,8 @@ with col2:
     #""",
     #unsafe_allow_html=True
     #)
-    st.markdown('<span class="hook-remove size-expander"></span>', unsafe_allow_html=True)
+    #st.markdown('<span class="hook-remove size-expander"></span>', unsafe_allow_html=True)
+    st.markdown('<span class="col-right"></span>', unsafe_allow_html=True) # hook
     with st.expander("Current Plots", expanded=True):
         if st.session_state.map_session_state.isochrones:
             for id, isochrone in st.session_state.map_session_state.isochrones.items():
@@ -760,6 +766,8 @@ with col2:
             st.markdown("No isochrones added yet.")
             st.markdown('<span class="hook-remove remove-button"></span>', unsafe_allow_html=True)
             st.button("Remove", key=f"remove_iso_last", use_container_width=True)
+#st.markdown('</div>', unsafe_allow_html=True)
+
 
 if st.session_state.reset_last_clicked:
     st_data['last_clicked'] = None
@@ -840,8 +848,4 @@ st.button("button2")
 
 
 
-win_w = streamlit_js_eval(
-    js_expressions="window.innerWidth",
-    key="win_w",
-)
-st.write("window width:", win_w)
+
