@@ -5,9 +5,13 @@ import folium
 from dataclasses import dataclass, field
 from typing import OrderedDict, Optional, Tuple
 from constants import FOLIUM_MARKER_COLORS
-from folium.plugins import MiniMap, MousePosition
+from folium.plugins import MiniMap, MousePosition, BeautifyIcon
 
-
+# move to contants?
+ISOCHRONE_COLORS = [
+    "#2A81CB", "#ff7f0e", "#2bd32b", "#d62728", "#9338e7",
+    "#f54177", "#e377c2", "#37f3e3", "#bcbd22", "#046e1b"
+]
 
 @dataclass
 class IsochroneLayerState:
@@ -24,10 +28,13 @@ class IsochroneLayerState:
             self.map_zoom = 10
 
         # set the isochrone color to match the marker color if not specified
-        if self.isochrone_color:
+        if self.isochrone_color and not is_hex_color(self.isochrone_color):
             self.isochrone_color = FOLIUM_MARKER_COLORS[self.isochrone_color]
+        elif is_hex_color(self.marker_color):
+            self.isochrone_color = self.marker_color           
         else: 
             self.isochrone_color = FOLIUM_MARKER_COLORS[self.marker_color]
+
 
     @property
     def center(self) -> Tuple[float, float]:
@@ -55,9 +62,13 @@ class MapState:
     use_map: bool = False # if true, use the map clicked location instead of searched address
 
 
-    def add_isochrone(self, geojson, marker_color='blue', 
+    def add_isochrone(self, geojson, marker_color=None, 
                       isochrone_color=None, map_zoom=None, transport_mode='car', time_allowance_mins = 30):
         
+        # Choose color based on current count
+        if marker_color == None:
+            index = len(self.isochrones) % len(ISOCHRONE_COLORS)
+            marker_color = ISOCHRONE_COLORS[index]
 
         # need to add some default randomness for the marker and isochrone colors when there are multiple isochrones and not specified
         new_layer = IsochroneLayerState(
@@ -217,12 +228,38 @@ def add_isochrone_layer(map: folium.Map, layer: IsochroneLayerState) -> None:
     if fa6_href not in str(root_html.render()):  # basic check to avoid duplicate injection
         root_html.add_child(folium.Element(fa6_link_tag))
     
+    icon=BeautifyIcon(
+        icon=transport_icon,   # FA6 classes work if you load FA6 CSS
+        icon_shape='marker',
+        background_color=layer.marker_color,
+        text_color='white',
+        border_color='black',
+        border_width=1,
+        inner_icon_style="margin-top:1px; margin-right:3px; font-size:16px;"
+    )
 
     # Create the marker for the starting point
     folium.Marker(
         location=[layer.lat, layer.lon], 
         tooltip='Starting location', # change to add id? and or name?
-        icon=folium.Icon(prefix='fa', icon=transport_icon, color=layer.marker_color)
+        icon=icon
+        #icon=folium.Icon(prefix='fa', icon=transport_icon, color=layer.marker_color)
     ).add_to(map)
 
+
+
+
+
+    print(f"marker color: {layer.marker_color}")
     return None
+
+
+
+
+# possibly move to utils.py or something
+
+import re # regex 
+HEX_COLOR_PATTERN = re.compile(r'^#(?:[0-9a-fA-F]{3}){1,2}$')
+
+def is_hex_color(s: str) -> bool:
+    return bool(HEX_COLOR_PATTERN.match(s))
