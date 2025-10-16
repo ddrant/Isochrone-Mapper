@@ -220,13 +220,13 @@ def add_isochrone_layer(map: folium.Map, layer: IsochroneLayerState) -> None:
     # now to add the isochrone polygon to the map 
     folium.GeoJson(layer.geojson, name="Isochrone 30mins driving", color=layer.isochrone_color).add_to(map)
     
-    # Inject FA 6 (Font Awesone 6) CSS for specific icons   
-    fa6_href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-    fa6_link_tag = f'<link rel="stylesheet" href="{fa6_href}">'
-    root_html = map.get_root().html
-    # Check if FA6 link already added
-    if fa6_href not in str(root_html.render()):  # basic check to avoid duplicate injection
-        root_html.add_child(folium.Element(fa6_link_tag))
+    ## Inject FA 6 (Font Awesone 6) CSS for specific icons   
+    #fa6_href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    #fa6_link_tag = f'<link rel="stylesheet" href="{fa6_href}">'
+    #root_html = map.get_root().html
+    ## Check if FA6 link already added
+    #if fa6_href not in str(root_html.render()):  # basic check to avoid duplicate injection
+    #    root_html.add_child(folium.Element(fa6_link_tag))
     
     icon=BeautifyIcon(
         icon=transport_icon,   # FA6 classes work if you load FA6 CSS

@@ -37,7 +37,6 @@ from functools import partial
 
 
 
-#st.set_page_config(page_title="Isochrone Map", initial_sidebar_state="expanded", layout='wide')
 
 
 ################
@@ -59,23 +58,7 @@ from functools import partial
 #################
 
 
-css_specific_button = """
-    <style>
-    /* Target button by key name (span id="type-name") */
-    .element-container:has(#remove-button) + div button {
-        background-color: #ff4d4d !important;
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 8px !important;
-        margin-top: -80px !important;
-    }
-    </style>
-    """
-# Custom CSS for a red "Remove" button
-#st.markdown(css_specific_button, unsafe_allow_html=True)
-
-
-
+# CSS to remove the gap left by removed elements (eg buttons)
 hook_remove_css = """
     <style>
     .element-container:has(style){
@@ -93,8 +76,8 @@ hook_remove_css = """
 st.markdown(hook_remove_css, unsafe_allow_html=True)
 
 
-# CLASS VERSION
 
+# Custom CSS for a red "Remove" button
 css_specific_button2 = """
     <style>
     /* Target button by key name (class="type-name") */
@@ -109,85 +92,11 @@ css_specific_button2 = """
     }
     </style>
     """
-# Custom CSS for a red "Remove" button
 st.markdown(css_specific_button2, unsafe_allow_html=True)
 
 
-#doesnt work?
 
-css_specific_expander = """
-    <style>
-    /* Target button by key name (class="type-name") */
-    .element-container:has(.size-expander) + div expander {
-        background-color: #ff4d4d !important;
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 8px !important;
-        margin-top: 0px !important;
-        margin-bottom: 10px !important;
-        min-width: 250px !important;
-    }
-    </style>
-    """
-#st.markdown(css_specific_expander, unsafe_allow_html=True)
-
-
-
-
-# this one below sets the min width of the main content but cuts off anything outside the window (invisible)
-
-#st.markdown("""
-#<style>
-#/* 1) Lock the app to a fixed minimum width */
-#html, body, [data-testid="stAppViewContainer"], .block-container {
-#  min-width: 1400px !important;   /* pick your width: 1200–1600 usually feels right */
-#}
-#
-#/* 2) When the viewport is smaller than that, allow horizontal scroll */
-#[data-testid="stAppViewContainer"] {
-#  overflow-x: auto !important;
-#}
-#
-#/* 3) (Optional) keep the right panel a fixed width so it doesn't collapse */
-#.right-panel { width: 360px; }
-#div[data-testid="stHorizontalBlock"] > div:has(.right-panel) {
-#  flex: 0 0 360px !important;      /* don’t let Streamlit shrink this column */
-#}
-#
-#/* 4) (Optional) stop tiny sub-columns from collapsing */
-#div[data-testid="column"] {
-#  flex: 0 0 auto;                  /* no flex shrink */
-#  min-width: 120px;                /* buttons won’t wrap letter-by-letter */
-#}
-#
-#/* 5) (Optional) keep folium iframe from resizing with container width */
-#div[data-testid="stIFrame"] iframe {
-#  max-width: none !important;
-#}
-#</style>
-#""", unsafe_allow_html=True)
-
-
-
-# This one keeps everyhing same width (or at least min width) but then it cuts off the left side making it impossible to scroll over there
-# but right side good?
-
- 
-#st.markdown("""
-#<style>
-#
-#
-#/* 2) Give the content a fixed minimum width so it won’t squash */
-#.block-container { 
-#        min-width: 1600px !important;
-#        margin-left: 50px !important;
-#        overflow: auto;
-#             
-#}  /* pick your width (e.g., 1300–1600) */
-#
-#</style>
-#""", unsafe_allow_html=True)
-
+# CSS to fix the layout and add horizontal scrollbar
 st.markdown("""
 <style>
 /* put the horizontal scrollbar on the whole page */
@@ -218,35 +127,6 @@ div[data-testid="stHorizontalBlock"] > div:has(.col-right) { flex: 0 0 300px  !i
 div[data-testid="stIFrame"] iframe { max-width: none !important; }
 </style>
 """, unsafe_allow_html=True)
-
-
-#/* fixed canvas width – pick values you like */
-##fixed-canvas { width: 1600px; min-width: 1600px;  }
-
-
-# in .block-container
-#         min-width: 1600px !important;
-#        width: 1600px !important;
-#        margin-left: 0 !important;     /* <-- stop centering */
-#        margin-right: 0 !important;
-#        padding-left: 1rem;            /* optional, keep some gutter */
-#        padding-right: 1rem;
-
-
-
-#/* 1) Allow horizontal scroll at every level that can clip */
-#html, body { overflow-x: visible !important; }
-#[data-testid="stAppViewContainer"] { overflow-x: visible !important; }   /* main scroll area */
-#section.main { overflow-x: visible !important;}                      /* safety */
-
-#/* 3) Optional: keep folium iframe from shrinking/weird max-width behavior */
-#div[data-testid="stIFrame"] iframe { min-width: 1200px !important;}
-
-#/* 4) Optional: prevent inner horizontal blocks from hiding overflow */
-#div[data-testid="stHorizontalBlock"] { overflow: visible !important; }
-#</style>
-
-# Fixed page width: pick what keeps your layout stable
 
 
 
@@ -466,24 +346,11 @@ with st.sidebar:
                 disabled=st.session_state.map_session_state.use_map
             )
 
-            #find_address = st.form_submit_button("Find Address", disabled=st.session_state.map_session_state.use_map, use_container_width=True)
 
             find_address = st.button("Find Address", disabled=st.session_state.map_session_state.use_map, use_container_width=True)
             # previous searches selectbox or suggestions
             
-            #st.markdown("""
-            #    <style>
-            #    /* Center the label text ONLY for the 'selected_history' selectbox */
-            #    label[for="selected_history"] > div:first-child {
-            #        text-align: center !important;
-            #        width: 100% !important;
-            #        font-size: 32px !important;
-            #        color: red !important;
-            #        background: yellow !important;
-            #        border: 2px solid blue !important;
-            #    }
-            #    </style>
-            #    """, unsafe_allow_html=True)
+
             st.selectbox(
                 ":material/history: Previous Searches", 
                 options= [None] + st.session_state.search_history,
@@ -518,10 +385,8 @@ with st.sidebar:
         )
 
         # generate isochrone (search) button 
-        #submitted = st.form_submit_button("Generate Isochrone", use_container_width=True)
         submitted = st.button("Generate Isochrone", use_container_width=True)
 
-   #submitted = st.button("Find address and Generate Isochrone", use_container_width=True, disabled=use_map_toggle)
     
         # REMOVE LAST ISOCHRONE BUTTON
         st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
@@ -622,7 +487,6 @@ if submitted:
         print("no location set")
         st.session_state.location_warning = True
         # change to no location set warning
-        #st.session_state.show_warning = True
     
     
     # reset the coords session state variable
@@ -727,28 +591,7 @@ def render_isochrone_card(isochrone_id, center, transport_mode, time_minutes):
 
 
 with col2:
-    #st.markdown("""
-    #    <style>
-    #    /* Target the inner container of the expander */
-    #    div[data-testid="stExpander"] > div {
-    #        background-color: #f0f0f5;  /* your custom background */
-    #        border-radius: 12px;
-    #        padding: 10px;
-    #    }
-    #    </style>
-    #    """, unsafe_allow_html=True)
-    #st.markdown(
-    #"""
-    #<style>
-    #/* Target the st.expander container */
-    #.element-container .streamlit-expander {
-    #    min-width: 280px; /* Set your desired minimum width */
-    #}
-    #</style>
-    #""",
-    #unsafe_allow_html=True
-    #)
-    #st.markdown('<span class="hook-remove size-expander"></span>', unsafe_allow_html=True)
+
     st.markdown('<span class="col-right"></span>', unsafe_allow_html=True) # hook
     with st.expander("Current Plots", expanded=True):
         if st.session_state.map_session_state.isochrones:
@@ -766,7 +609,7 @@ with col2:
             st.markdown("No isochrones added yet.")
             st.markdown('<span class="hook-remove remove-button"></span>', unsafe_allow_html=True)
             st.button("Remove", key=f"remove_iso_last", use_container_width=True)
-#st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 if st.session_state.reset_last_clicked:
@@ -779,72 +622,12 @@ if st.session_state.map_session_state.use_map and st_data['last_clicked']:
     st.rerun()
 
 
-#st.markdown(
-#"""
-#<style>
-#.custom-container {
-#background-color: #f0f8ff; /* Light blue */
-#padding: 20px;
-#border-radius: 10px;
-#border: 2px solid #4682b4; /* Steel blue border */
-#}
-#</style>
-#""",
-#unsafe_allow_html=True,
-#)
 
-# Use the custom class in a container
-#st.markdown(f'<div class="custom-container">This is a colored container! {st.button("help")}</div>', unsafe_allow_html=True)
 
 st_data
 
 
 
-st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
-
-st.button("Remove", key="remove_iso_93")
-#
-#css_button_tst = """
-#    <style>
-#    .element-container:nth-of-type(1) button {
-#        background-color: #3498db !important;
-#        color: white !important;
-#        border-radius: 5px !important;
-#        border: none !important;
-#    }
-#    </style>
-#    """
-
-#st.markdown(css_button_tst, unsafe_allow_html=True)
-#st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
-st.button("gi")
-
-st.button("button1")
-st.markdown(
-    """
-    <style>
-    .element-container:has(.button-after) + div button {
-        background-color: orange;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-st.button("button19")
-st.markdown('<span class="hook-remove button-after"></span>', unsafe_allow_html=True)
-st.button("My Button")
-#st.markdown('<span class="remove-button"></span>', unsafe_allow_html=True)
-st.button("button2")
-
-    #    .element-container:has(style){
-    #    display: none;
-    #}
-    ##button-after {
-    #   display: none;
-    #}
-    #.element-container:has(#button-after) {
-    #    display: none;
-    #}
 
 
 
