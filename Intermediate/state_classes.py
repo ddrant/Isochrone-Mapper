@@ -48,6 +48,18 @@ class IsochroneLayerState:
     @property
     def lon(self) -> float:
         return self.center[1]
+
+    def change_color_from_widget(self, widget_key: str):
+        new_color = st.session_state.get(widget_key)
+        
+        if is_hex_color(new_color):
+            self.marker_color = new_color
+            self.isochrone_color = new_color
+        elif new_color in FOLIUM_MARKER_COLORS:
+            self.marker_color = new_color
+            self.isochrone_color = FOLIUM_MARKER_COLORS[new_color]
+        else:
+            print(f"Color {new_color} not recognized. No changes made.")
         
 
 

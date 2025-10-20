@@ -595,15 +595,20 @@ with col2:
     st.markdown('<span class="col-right"></span>', unsafe_allow_html=True) # hook
     with st.expander("Current Plots", expanded=True):
         if st.session_state.map_session_state.isochrones:
+
+            map_state = st.session_state.map_session_state
+
             for id, isochrone in st.session_state.map_session_state.isochrones.items():
                 
+                
+
                 render_isochrone_card(isochrone_id= id, center=isochrone.center, transport_mode=isochrone.transport_mode, time_minutes=isochrone.time_allowance_mins)
                 col1, col2, col3 = st.columns([3,4,2])
-                col1.button("focus", key=f"focus_iso_{id}", on_click=partial(st.session_state.map_session_state.select_isochrone, id), use_container_width=True)
-                col3.color_picker("color", key=f"color_{id}",label_visibility='collapsed', on_change="",value="#add8fc") # add on change
+                col1.button("focus", key=f"focus_iso_{id}", on_click=partial(map_state.select_isochrone, id), use_container_width=True)
+                col3.color_picker("color", key=f"color_{id}",label_visibility='collapsed', on_change=partial(map_state.isochrones[id].change_color_from_widget, f"color_{id}"),value="#add8fc") # add on change
                 #st.markdown("---")
                 col2.markdown('<span class="hook-remove remove-button" style="height: 0px;"></span>', unsafe_allow_html=True)
-                col2.button("Remove", key=f"remove_iso_{id}", use_container_width=True, on_click=partial(st.session_state.map_session_state.remove_isochrone, id))
+                col2.button("Remove", key=f"remove_iso_{id}", use_container_width=True, on_click=partial(map_state.remove_isochrone, id))
                 
         else:
             st.markdown("No isochrones added yet.")
